@@ -7,22 +7,25 @@ import {
   Droplets, 
   Plus, 
   Wallet, 
-  CheckCircle2, 
-  AlertCircle, 
-  Info,
-  Calendar,
-  Utensils,
-  Sparkles
+  Calendar, 
+  Utensils, 
+  Sparkles,
+  Camera,
+  Bot,
+  Check,
+  ArrowRight,
+  Info
 } from 'lucide-react';
 import { FoodItem } from '../types/fitness';
+import { getSmartBudgetMealSuggestions, parseQuickIndianMeal } from '../utils/aiAdvisor';
 
 export const NutritionTracker: React.FC = () => {
-  const { calorieProfile, updateCalorieProfile, nutritionLogs, addFoodLog } = useFitness();
+  const { calorieProfile, nutritionLogs, addFoodLog } = useFitness();
 
   const [selectedDayIndex, setSelectedDayIndex] = useState<number>(0);
-  const [activeTab, setActiveTab] = useState<'daily' | 'budget' | 'estimates'>('daily');
+  const [activeTab, setActiveTab] = useState<'daily' | 'ai-optimizer' | 'budget' | 'estimates'>('daily');
 
-  // New item modal/form states
+  // Manual food form state
   const [newMeal, setNewMeal] = useState<'Breakfast' | 'Lunch' | 'Post-Workout' | 'Dinner'>('Post-Workout');
   const [foodName, setFoodName] = useState('');
   const [foodQty, setFoodQty] = useState('');
@@ -31,24 +34,34 @@ export const NutritionTracker: React.FC = () => {
   const [foodProtein, setFoodProtein] = useState('');
   const [foodRawCooked, setFoodRawCooked] = useState<'raw' | 'cooked' | 'na'>('cooked');
 
+  // AI Meal / Photo Scan simulator state
+  const [aiMealPrompt, setAiMealPrompt] = useState('');
+  const [aiDetectedMeal, setAiDetectedMeal] = useState<any>(null);
+  const [isAiScanning, setIsAiScanning] = useState(false);
+
   const currentDay = nutritionLogs[selectedDayIndex] || nutritionLogs[0];
 
   // Calculate totals
   let totalCalories = 0;
   let totalProtein = 0;
-  let totalCarbs = 0;
-  let totalFat = 0;
 
   if (currentDay) {
     currentDay.meals.forEach(m => {
       m.items.forEach(i => {
         totalCalories += i.calories || 0;
         totalProtein += i.protein || 0;
-        totalCarbs += i.carbs || 0;
-        totalFat += i.fat || 0;
       });
     });
   }
+
+  const proteinRemaining = Math.max(0, calorieProfile.proteinTargetMin - totalProtein);
+  const caloriesRemaining = Math.max(0, calorieProfile.cuttingTarget - totalCalories);
+
+  // AI Meal suggestions based on remaining protein
+  const aiBudgetSuggestions = getSmartBudgetMealSuggestions(
+    proteinRemaining > 0 ? proteinRemaining : 25,
+    caloriesRemaining > 0 ? caloriesRemaining : 400
+  );
 
   const handleQuickAddAffordable = (pillar: typeof AFFORDABLE_PROTEIN_PILLARS[0]) => {
     let newItem: FoodItem = {
@@ -114,8 +127,39 @@ export const NutritionTracker: React.FC = () => {
     setFoodProtein('');
   };
 
-  const proteinRemaining = Math.max(0, calorieProfile.proteinTargetMin - totalProtein);
-  const caloriesRemaining = Math.max(0, calorieProfile.cuttingTarget - totalCalories);
+  const handleScanAiMeal = (sampleText?: string) => {
+    const textToScan = sampleText || aiMealPrompt;
+    if (!textToScan.trim()) return;
+
+    setIsAiScanning(true);
+    setTimeout(() => {
+      const parsed = parseQuickIndianMeal(textToScan);
+      setAiDetectedMeal(parsed);
+      setIsAiScanning(false);
+    }, 450);
+  };
+
+  const handleApplyAiMealToLog = () => {
+    if (!aiDetectedMeal) return;
+
+    const newItem: FoodItem = {
+      id: `food-ai-${Date.now()}`,
+      name: aiDetectedMeal.name,
+      quantity: 1,
+      unit: 'serving',
+      calories: aiDetectedMeal.calories,
+      protein: aiDetectedMeal.protein,
+      carbs: aiDetectedMeal.carbs,
+      fat: aiDetectedMeal.fat,
+      rawOrCooked: 'cooked',
+      notes: 'AI Indian Meal Macro Parser'
+    };
+
+    addFoodLog(currentDay.date, 'Dinner', newItem);
+    setAiDetectedMeal(null);
+    setAiMealPrompt('');
+    setActiveTab('daily');
+  };
 
   return (
     <div className="space-y-6 pb-12">
@@ -127,10 +171,11 @@ export const NutritionTracker: React.FC = () => {
             Nutrition & Protein Command
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Tracking cutting deficit (1,940 kcal), protein target (130–150g), budget pillars & historical days
+            Tracking cutting deficit (1,940 kcal), protein target (130–150g), budget pillars & AI optimizations
           </p>
         </div>
 
+        {/* Navigation Sub-Tabs */}
         <div className="flex items-center gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800 self-start sm:self-center">
           <button
             onClick={() => setActiveTab('daily')}
@@ -141,12 +186,23 @@ export const NutritionTracker: React.FC = () => {
             Daily Log
           </button>
           <button
+            onClick={() => setActiveTab('ai-optimizer')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
+              activeTab === 'ai-optimizer' 
+                ? 'bg-gradient-to-r from-amber-500 to-indigo-600 text-white shadow-sm' 
+                : 'text-amber-400 hover:text-white'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            AI Budget & Macro Optimizer
+          </button>
+          <button
             onClick={() => setActiveTab('budget')}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
               activeTab === 'budget' ? 'bg-amber-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
             }`}
           >
-            Affordable Protein Stack
+            Affordable Pillars
           </button>
           <button
             onClick={() => setActiveTab('estimates')}
@@ -154,7 +210,7 @@ export const NutritionTracker: React.FC = () => {
               activeTab === 'estimates' ? 'bg-amber-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
             }`}
           >
-            Energy & BMR Models
+            BMR Models
           </button>
         </div>
       </div>
@@ -272,14 +328,31 @@ export const NutritionTracker: React.FC = () => {
             </div>
           </div>
 
-          {currentDay.notes && (
-            <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 text-xs text-slate-300 flex items-start gap-2">
-              <Info className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+          {/* AI Optimizer shortcut banner */}
+          <div 
+            onClick={() => setActiveTab('ai-optimizer')}
+            className="cursor-pointer p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-indigo-500/10 to-slate-900 border border-amber-500/30 flex items-center justify-between hover:border-amber-400 transition"
+          >
+            <div className="flex items-center gap-2.5">
+              <span className="p-2 rounded-xl bg-amber-500/20 text-amber-400">
+                <Bot className="w-4 h-4" />
+              </span>
               <div>
-                <strong className="text-white">Historical Log Notes ({currentDay.date}):</strong> {currentDay.notes}
+                <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                  AI Macro & Budget Optimizer Available
+                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-500 text-slate-950 font-extrabold">NEW</span>
+                </span>
+                <p className="text-[11px] text-slate-400">
+                  {proteinRemaining > 0 
+                    ? `Need ${Math.round(proteinRemaining)}g protein? AI calculated 3 budget combos under ₹30 without whey.` 
+                    : 'Analyze Indian meals or estimate macros from photo text.'}
+                </p>
               </div>
             </div>
-          )}
+            <span className="text-xs font-semibold text-amber-400 flex items-center gap-1">
+              Open <ArrowRight className="w-3.5 h-3.5" />
+            </span>
+          </div>
 
           {/* Meals Breakdown & Quick Add Forms */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -336,7 +409,7 @@ export const NutritionTracker: React.FC = () => {
               })}
             </div>
 
-            {/* Quick Add Food Item & Budget Staple inserter (4 cols) */}
+            {/* Quick Add Food Item (4 cols) */}
             <div className="lg:col-span-4 space-y-4">
               <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-md">
                 <h3 className="font-bold text-white text-sm mb-3 flex items-center gap-2">
@@ -479,6 +552,188 @@ export const NutritionTracker: React.FC = () => {
         </div>
       )}
 
+      {/* AI Budget & Macro Optimizer Tab */}
+      {activeTab === 'ai-optimizer' && (
+        <div className="space-y-6">
+          {/* Top AI Status Banner */}
+          <div className="p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-indigo-500/10 to-slate-900 border border-amber-500/30">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                  <Sparkles className="w-3.5 h-3.5" /> AI Nutrition Intelligence
+                </span>
+                <h2 className="text-xl font-bold text-white mt-1">Budget Macro & Indian Meal Scanner</h2>
+                <p className="text-xs text-slate-300 mt-0.5">
+                  Solves your remaining protein deficit without exceeding your ₹30–40 budget, respecting the 1 scoop/day whey cap.
+                </p>
+              </div>
+
+              <div className="bg-slate-950/80 border border-slate-800 px-4 py-2 rounded-xl text-right">
+                <div className="text-[10px] text-slate-400 uppercase font-mono">Current Deficit</div>
+                <div className="text-lg font-bold font-mono text-cyan-400">
+                  {proteinRemaining > 0 ? `${Math.round(proteinRemaining)}g protein left` : 'Protein Hit!'}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left Col: Instant Budget Combos under ₹30-40 */}
+            <div className="lg:col-span-7 space-y-4">
+              <h3 className="font-bold text-white text-base flex items-center gap-2">
+                <Wallet className="w-5 h-5 text-emerald-400" />
+                AI Suggested Budget Protein Combos (Under ₹35)
+              </h3>
+
+              <div className="space-y-3">
+                {aiBudgetSuggestions.map((sug) => (
+                  <div 
+                    key={sug.id} 
+                    className="p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-amber-500/40 transition space-y-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-bold text-white text-sm">{sug.title}</h4>
+                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400 font-bold font-mono text-xs border border-emerald-800/40">
+                        {sug.estimatedCost}
+                      </span>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 text-xs text-slate-300 space-y-1">
+                      {sug.items.map((it, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                          <span>{it}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1 text-xs">
+                      <div className="text-slate-400 font-mono">
+                        Yield: <strong className="text-cyan-400 font-bold">{sug.proteinYield}g protein</strong> • <strong className="text-amber-400">{sug.calories} kcal</strong>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          const newItem: FoodItem = {
+                            id: `food-ai-${Date.now()}`,
+                            name: sug.title,
+                            quantity: 1,
+                            unit: 'combo',
+                            calories: sug.calories,
+                            protein: sug.proteinYield,
+                            carbs: 20,
+                            fat: 10,
+                            rawOrCooked: 'cooked',
+                            affordablePillar: true
+                          };
+                          addFoodLog(currentDay.date, 'Dinner', newItem);
+                          alert('Added AI combo to Dinner!');
+                          setActiveTab('daily');
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-md transition"
+                      >
+                        Log to Dinner
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Right Col: Quick Photo Scan / Natural Language Meal Parser */}
+            <div className="lg:col-span-5 space-y-4">
+              <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-4">
+                <div className="flex items-center gap-2">
+                  <Camera className="w-5 h-5 text-indigo-400" />
+                  <h3 className="font-bold text-white text-base">Quick Scan Indian Meal</h3>
+                </div>
+                <p className="text-xs text-slate-400">
+                  Type what you ate or what is visible on your plate (e.g. <em>"2 rotis + palak paneer + 1 bowl curd"</em>). AI parses calories & protein in 1 tap.
+                </p>
+
+                <div className="space-y-2">
+                  <textarea
+                    rows={3}
+                    placeholder="e.g. 2 chapatis + soybean curry + 1 cup dahi"
+                    value={aiMealPrompt}
+                    onChange={(e) => setAiMealPrompt(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-amber-500"
+                  />
+
+                  {/* Sample presets for quick testing */}
+                  <div className="flex flex-wrap gap-1.5 text-[10px]">
+                    <span className="text-slate-500 self-center">Try:</span>
+                    <button 
+                      onClick={() => {
+                        setAiMealPrompt('2 rotis + palak paneer + 1 bowl curd');
+                        handleScanAiMeal('2 rotis + palak paneer + 1 bowl curd');
+                      }}
+                      className="px-2 py-0.5 rounded bg-slate-950 hover:bg-slate-800 text-slate-300 border border-slate-800"
+                    >
+                      2 rotis + paneer + curd
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setAiMealPrompt('49g soybean + 2 rotis + 3 boiled eggs');
+                        handleScanAiMeal('49g soybean + 2 rotis + 3 boiled eggs');
+                      }}
+                      className="px-2 py-0.5 rounded bg-slate-950 hover:bg-slate-800 text-slate-300 border border-slate-800"
+                    >
+                      Soybean + eggs
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={() => handleScanAiMeal()}
+                    disabled={isAiScanning || !aiMealPrompt}
+                    className="w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-bold text-xs shadow-md transition disabled:opacity-50"
+                  >
+                    {isAiScanning ? 'AI Analyzing Indian Nutrition...' : 'Parse Indian Meal Macros ✨'}
+                  </button>
+                </div>
+
+                {/* Parsed Meal Result */}
+                {aiDetectedMeal && (
+                  <div className="p-4 rounded-xl bg-slate-950 border border-emerald-500/40 text-xs space-y-3 animate-fadeIn">
+                    <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                      <span className="font-bold text-white">AI Meal Analysis Result</span>
+                      <span className="text-[10px] text-emerald-400 font-mono font-bold">PARSED</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-center">
+                      <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 font-mono">
+                        <div className="text-[10px] text-slate-400">Calories</div>
+                        <div className="text-base font-bold text-amber-400">{aiDetectedMeal.calories} kcal</div>
+                      </div>
+                      <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 font-mono">
+                        <div className="text-[10px] text-slate-400">Protein</div>
+                        <div className="text-base font-bold text-cyan-400">{aiDetectedMeal.protein}g P</div>
+                      </div>
+                    </div>
+
+                    <div className="text-[11px] text-slate-300 space-y-1">
+                      {aiDetectedMeal.recognizedItems.map((item: string, idx: number) => (
+                        <div key={idx} className="flex items-center gap-1.5 text-slate-400">
+                          <Check className="w-3 h-3 text-emerald-400" />
+                          <span>{item}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={handleApplyAiMealToLog}
+                      className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition"
+                    >
+                      Confirm & Add to Today's Food Log
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {activeTab === 'budget' && (
         <div className="space-y-6">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
@@ -534,17 +789,6 @@ export const NutritionTracker: React.FC = () => {
                   ))}
                 </tbody>
               </table>
-            </div>
-
-            <div className="mt-6 p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300 space-y-2">
-              <div className="font-bold text-amber-400 flex items-center gap-1.5">
-                <Info className="w-4 h-4" /> Historical Budget Rule:
-              </div>
-              <p>
-                The user stated they cannot comfortably afford high-protein oats + peanut butter + whey twice every day. 
-                The system intentionally maintains a 1x daily cap for whey (~₹70/serving) and prioritizes raw soybeans (₹10 for ~18g protein) 
-                and whole cow milk (₹15 for ~18g protein) to hit 130–150g protein reliably under budget.
-              </p>
             </div>
           </div>
         </div>

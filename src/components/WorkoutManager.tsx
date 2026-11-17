@@ -10,10 +10,16 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
-  BedDouble
+  BedDouble,
+  Sparkles,
+  Zap,
+  ShieldAlert,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { SetEntry } from '../types/fitness';
-import { getFormattedDate, getISODate, getDayName } from '../utils/dateUtils';
+import { getFormattedDate, getISODate } from '../utils/dateUtils';
+import { getSmartOverloadPrediction } from '../utils/aiAdvisor';
 
 export const WorkoutManager: React.FC = () => {
   const { 
@@ -27,11 +33,15 @@ export const WorkoutManager: React.FC = () => {
     stopRestTimer,
     selectedDate,
     setSelectedDate,
-    currentDaySchedule
+    currentDaySchedule,
+    recoveryLogs
   } = useFitness();
 
   const [activeTab, setActiveTab] = useState<'logger' | 'splits' | 'progression'>('logger');
   const [selectedSplitId, setSelectedSplitId] = useState<string>('trainer-split');
+  const [expandedAiExerciseId, setExpandedAiExerciseId] = useState<string | null>(null);
+
+  const latestRecovery = recoveryLogs[0] || { readiness: 8, sleepHours: 6.8 };
 
   // Toggle set completed
   const handleToggleSet = (exerciseId: string, setIndex: number) => {
@@ -226,140 +236,179 @@ export const WorkoutManager: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {todaysWorkout.exercises.map((exercise) => (
-                <div 
-                  key={exercise.id} 
-                  className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-lg"
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-800">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-lg font-bold text-white">{exercise.name}</h3>
-                        <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-950 text-indigo-300 border border-indigo-800/40">
-                          {exercise.muscleGroup}
-                        </span>
-                        <span className="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-400">
-                          {exercise.equipment}
-                        </span>
+              {todaysWorkout.exercises.map((exercise) => {
+                const ai = getSmartOverloadPrediction(
+                  exercise.name, 
+                  exercise.lastPerformance, 
+                  latestRecovery.readiness, 
+                  latestRecovery.sleepHours
+                );
+                const isExpanded = expandedAiExerciseId === exercise.id;
+
+                return (
+                  <div 
+                    key={exercise.id} 
+                    className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-3"
+                  >
+                    {/* Header */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-800">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-lg font-bold text-white">{exercise.name}</h3>
+                          <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-950 text-indigo-300 border border-indigo-800/40">
+                            {exercise.muscleGroup}
+                          </span>
+                          <span className="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-400">
+                            {exercise.equipment}
+                          </span>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400 mt-1">
+                          <div>
+                            Historical Milestone: <span className="text-amber-400 font-medium">{exercise.historicalBest}</span>
+                          </div>
+                          <div>
+                            Previous Session: <span className="text-indigo-300 font-medium">{exercise.lastPerformance}</span>
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400 mt-1">
-                        <div>
-                          Historical Milestone: <span className="text-amber-400 font-medium">{exercise.historicalBest}</span>
-                        </div>
-                        <div>
-                          Previous Session: <span className="text-indigo-300 font-medium">{exercise.lastPerformance}</span>
-                        </div>
-                      </div>
+                      <button
+                        onClick={() => handleAddSet(exercise.id)}
+                        className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-600/30 hover:bg-indigo-600 text-indigo-300 hover:text-white transition self-start sm:self-center"
+                      >
+                        <Plus className="w-3.5 h-3.5" /> Add Set
+                      </button>
                     </div>
 
-                    <button
-                      onClick={() => handleAddSet(exercise.id)}
-                      className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-600/30 hover:bg-indigo-600 text-indigo-300 hover:text-white transition self-start sm:self-center"
-                    >
-                      <Plus className="w-3.5 h-3.5" /> Add Set
-                    </button>
-                  </div>
+                    {/* Flawless, Lightweight AI Overload Predictor Pill */}
+                    <div className="p-3 rounded-xl bg-gradient-to-r from-amber-500/10 via-indigo-500/5 to-transparent border border-amber-500/25 transition">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="p-1 rounded-md bg-amber-500/20 text-amber-400">
+                            <Zap className="w-3.5 h-3.5 fill-amber-400" />
+                          </span>
+                          <span className="font-bold text-amber-400">AI Overload Target:</span>
+                          <span className="font-semibold text-slate-200">{ai.headline}</span>
+                        </div>
 
-                  {/* Set Row Table */}
-                  <div className="mt-4 overflow-x-auto">
-                    <table className="w-full text-left text-xs text-slate-300">
-                      <thead className="text-[11px] uppercase tracking-wider text-slate-500 border-b border-slate-800/60 font-mono">
-                        <tr>
-                          <th className="pb-2 pl-2">Set</th>
-                          <th className="pb-2">Type</th>
-                          <th className="pb-2">Weight (kg)</th>
-                          <th className="pb-2">Reps</th>
-                          <th className="pb-2">RIR (0–5)</th>
-                          <th className="pb-2">Notes / Context</th>
-                          <th className="pb-2 pr-2 text-right">Done</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-800/40">
-                        {exercise.sets.map((set, sIdx) => (
-                          <tr 
-                            key={set.setNumber} 
-                            className={`hover:bg-slate-800/30 transition ${
-                              set.completed ? 'bg-emerald-950/20' : ''
-                            }`}
-                          >
-                            <td className="py-2.5 pl-2 font-mono font-bold text-slate-400">
-                              #{set.setNumber}
-                            </td>
-                            <td className="py-2.5">
-                              <select
-                                value={set.setType}
-                                onChange={(e) => handleUpdateSet(exercise.id, sIdx, 'setType', e.target.value)}
-                                className="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none"
-                              >
-                                <option value="warmup">Warm-up</option>
-                                <option value="working">Working</option>
-                                <option value="pr">PR Attempt</option>
-                                <option value="drop">Drop Set</option>
-                                <option value="failure">To Failure</option>
-                                <option value="assisted">Assisted</option>
-                              </select>
-                            </td>
-                            <td className="py-2.5">
-                              <input
-                                type="number"
-                                value={set.weight ?? ''}
-                                onChange={(e) => handleUpdateSet(exercise.id, sIdx, 'weight', parseFloat(e.target.value) || null)}
-                                className="w-20 bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-white font-mono focus:border-indigo-500 focus:outline-none"
-                                placeholder="kg"
-                              />
-                            </td>
-                            <td className="py-2.5">
-                              <input
-                                type="number"
-                                value={set.reps ?? ''}
-                                onChange={(e) => handleUpdateSet(exercise.id, sIdx, 'reps', parseInt(e.target.value) || null)}
-                                className="w-16 bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-white font-mono focus:border-indigo-500 focus:outline-none"
-                                placeholder="reps"
-                              />
-                            </td>
-                            <td className="py-2.5">
-                              <select
-                                value={set.rir ?? ''}
-                                onChange={(e) => handleUpdateSet(exercise.id, sIdx, 'rir', e.target.value === '' ? null : parseInt(e.target.value))}
-                                className="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-amber-400 font-mono focus:outline-none"
-                              >
-                                <option value="">NA</option>
-                                <option value="0">0 RIR (Failure)</option>
-                                <option value="1">1 RIR</option>
-                                <option value="2">2 RIR</option>
-                                <option value="3">3 RIR</option>
-                                <option value="4">4 RIR</option>
-                              </select>
-                            </td>
-                            <td className="py-2.5">
-                              <input
-                                type="text"
-                                value={set.notes || ''}
-                                onChange={(e) => handleUpdateSet(exercise.id, sIdx, 'notes', e.target.value)}
-                                placeholder="e.g. good stretch, 100% effort, slight spotter touch"
-                                className="w-full min-w-[180px] bg-slate-950/60 border border-slate-800/80 rounded px-2 py-1 text-xs text-slate-300 focus:border-indigo-500 focus:outline-none"
-                              />
-                            </td>
-                            <td className="py-2.5 pr-2 text-right">
-                              <button
-                                onClick={() => handleToggleSet(exercise.id, sIdx)}
-                                className={`p-1.5 rounded-lg border transition ${
-                                  set.completed 
-                                    ? 'bg-emerald-500 border-emerald-400 text-slate-950' 
-                                    : 'bg-slate-950 border-slate-800 text-slate-500 hover:border-slate-700'
-                                }`}
-                              >
-                                <CheckCircle2 className="w-4 h-4" />
-                              </button>
-                            </td>
+                        <button
+                          onClick={() => setExpandedAiExerciseId(isExpanded ? null : exercise.id)}
+                          className="text-[11px] flex items-center gap-1 text-slate-400 hover:text-amber-300 ml-2 shrink-0 font-medium"
+                        >
+                          <span>{isExpanded ? 'Less' : 'Why'}</span>
+                          {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                        </button>
+                      </div>
+
+                      {isExpanded && (
+                        <div className="mt-2.5 pt-2 border-t border-slate-800/60 text-[11px] text-slate-300 space-y-1 animate-fadeIn">
+                          <p><strong className="text-indigo-300">Fatigue & Readiness:</strong> {ai.fatigueInsight}</p>
+                          <p><strong className="text-emerald-400">Strategy:</strong> {ai.reasoning}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Set Row Table */}
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs text-slate-300">
+                        <thead className="text-[11px] uppercase tracking-wider text-slate-500 border-b border-slate-800/60 font-mono">
+                          <tr>
+                            <th className="pb-2 pl-2">Set</th>
+                            <th className="pb-2">Type</th>
+                            <th className="pb-2">Weight (kg)</th>
+                            <th className="pb-2">Reps</th>
+                            <th className="pb-2">RIR (0–5)</th>
+                            <th className="pb-2">Notes / Context</th>
+                            <th className="pb-2 pr-2 text-right">Done</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/40">
+                          {exercise.sets.map((set, sIdx) => (
+                            <tr 
+                              key={set.setNumber} 
+                              className={`hover:bg-slate-800/30 transition ${
+                                set.completed ? 'bg-emerald-950/20' : ''
+                              }`}
+                            >
+                              <td className="py-2.5 pl-2 font-mono font-bold text-slate-400">
+                                #{set.setNumber}
+                              </td>
+                              <td className="py-2.5">
+                                <select
+                                  value={set.setType}
+                                  onChange={(e) => handleUpdateSet(exercise.id, sIdx, 'setType', e.target.value)}
+                                  className="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none"
+                                >
+                                  <option value="warmup">Warm-up</option>
+                                  <option value="working">Working</option>
+                                  <option value="pr">PR Attempt</option>
+                                  <option value="drop">Drop Set</option>
+                                  <option value="failure">To Failure</option>
+                                  <option value="assisted">Assisted</option>
+                                </select>
+                              </td>
+                              <td className="py-2.5">
+                                <input
+                                  type="number"
+                                  value={set.weight ?? ''}
+                                  onChange={(e) => handleUpdateSet(exercise.id, sIdx, 'weight', parseFloat(e.target.value) || null)}
+                                  className="w-20 bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-white font-mono focus:border-indigo-500 focus:outline-none"
+                                  placeholder="kg"
+                                />
+                              </td>
+                              <td className="py-2.5">
+                                <input
+                                  type="number"
+                                  value={set.reps ?? ''}
+                                  onChange={(e) => handleUpdateSet(exercise.id, sIdx, 'reps', parseInt(e.target.value) || null)}
+                                  className="w-16 bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-white font-mono focus:border-indigo-500 focus:outline-none"
+                                  placeholder="reps"
+                                />
+                              </td>
+                              <td className="py-2.5">
+                                <select
+                                  value={set.rir ?? ''}
+                                  onChange={(e) => handleUpdateSet(exercise.id, sIdx, 'rir', e.target.value === '' ? null : parseInt(e.target.value))}
+                                  className="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-amber-400 font-mono focus:outline-none"
+                                >
+                                  <option value="">NA</option>
+                                  <option value="0">0 RIR (Failure)</option>
+                                  <option value="1">1 RIR</option>
+                                  <option value="2">2 RIR</option>
+                                  <option value="3">3 RIR</option>
+                                  <option value="4">4 RIR</option>
+                                </select>
+                              </td>
+                              <td className="py-2.5">
+                                <input
+                                  type="text"
+                                  value={set.notes || ''}
+                                  onChange={(e) => handleUpdateSet(exercise.id, sIdx, 'notes', e.target.value)}
+                                  placeholder="e.g. good stretch, 100% effort, slight spotter touch"
+                                  className="w-full min-w-[180px] bg-slate-950/60 border border-slate-800/80 rounded px-2 py-1 text-xs text-slate-300 focus:border-indigo-500 focus:outline-none"
+                                />
+                              </td>
+                              <td className="py-2.5 pr-2 text-right">
+                                <button
+                                  onClick={() => handleToggleSet(exercise.id, sIdx)}
+                                  className={`p-1.5 rounded-lg border transition ${
+                                    set.completed 
+                                      ? 'bg-emerald-500 border-emerald-400 text-slate-950' 
+                                      : 'bg-slate-950 border-slate-800 text-slate-500 hover:border-slate-700'
+                                  }`}
+                                >
+                                  <CheckCircle2 className="w-4 h-4" />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
