@@ -19,8 +19,7 @@ import {
   MoreHorizontal,
   X,
   Sun,
-  Moon,
-  ChevronDown
+  Moon
 } from 'lucide-react';
 
 const NAME_OPTIONS = ['Aaduu', 'Aadesh', 'Handsome', 'Aadyy'];
@@ -29,16 +28,26 @@ const MainApp: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [moreSheetOpen, setMoreSheetOpen] = useState<boolean>(false);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+
+  // Random / anonymous selection without dropdown
   const [selectedName, setSelectedName] = useState<string>(() => {
-    return localStorage.getItem('user_display_name') || 'Aadesh';
+    const randomIndex = Math.floor(Math.random() * NAME_OPTIONS.length);
+    return NAME_OPTIONS[randomIndex];
   });
-  const [showNameDropdown, setShowNameDropdown] = useState<boolean>(false);
 
   const { restTimerSeconds, stopRestTimer, startRestTimer } = useFitness();
 
+  // Subtle periodic change every 45 seconds or on page visit
   useEffect(() => {
-    localStorage.setItem('user_display_name', selectedName);
-  }, [selectedName]);
+    const interval = setInterval(() => {
+      setSelectedName(prev => {
+        const remaining = NAME_OPTIONS.filter(n => n !== prev);
+        const next = remaining[Math.floor(Math.random() * remaining.length)];
+        return next;
+      });
+    }, 45000);
+    return () => clearInterval(interval);
+  }, []);
 
   const toggleTheme = () => {
     setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
@@ -67,7 +76,7 @@ const MainApp: React.FC = () => {
       {/* Sidebar for Desktop & Tablets (>= 768px) */}
       <aside className={`hidden md:flex flex-col w-64 ${theme === 'light' ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'} border-r p-4 justify-between shrink-0 sticky top-0 h-screen`}>
         <div>
-          {/* Replaced Header: Hello, welcome back [Name] + Theme switch */}
+          {/* Header: Anonymous greeting without select dropdown + Theme switch */}
           <div className={`px-2 py-4 mb-6 border-b ${theme === 'light' ? 'border-slate-200' : 'border-slate-800'}`}>
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
@@ -88,36 +97,11 @@ const MainApp: React.FC = () => {
               </button>
             </div>
 
-            {/* Name Selector Dropdown */}
-            <div className="relative mt-1.5">
-              <button
-                onClick={() => setShowNameDropdown(!showNameDropdown)}
-                className={`flex items-center justify-between w-full text-left font-extrabold text-lg text-amber-400 py-1 px-2 rounded-lg transition hover:bg-amber-500/10`}
-              >
-                <span className="truncate">{selectedName}</span>
-                <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showNameDropdown ? 'rotate-180' : ''}`} />
-              </button>
-
-              {showNameDropdown && (
-                <div className={`absolute top-full left-0 right-0 mt-1 z-50 rounded-xl shadow-xl border ${theme === 'light' ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'} p-1 space-y-0.5`}>
-                  {NAME_OPTIONS.map((name) => (
-                    <button
-                      key={name}
-                      onClick={() => {
-                        setSelectedName(name);
-                        setShowNameDropdown(false);
-                      }}
-                      className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                        selectedName === name 
-                          ? 'bg-amber-500/20 text-amber-400' 
-                          : 'text-slate-400 hover:text-white hover:bg-slate-800'
-                      }`}
-                    >
-                      {name}
-                    </button>
-                  ))}
-                </div>
-              )}
+            {/* Clean Anonymous Name (No dropdown) */}
+            <div className="mt-1.5 px-0.5">
+              <span className="font-extrabold text-xl text-amber-400 tracking-tight transition-all duration-300">
+                {selectedName}
+              </span>
             </div>
           </div>
 
@@ -175,35 +159,8 @@ const MainApp: React.FC = () => {
       <header className={`md:hidden ${theme === 'light' ? 'bg-white/95 border-slate-200' : 'bg-slate-900/95 border-slate-800'} backdrop-blur-md border-b px-4 py-3 flex items-center justify-between sticky top-0 z-40`} style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}>
         <div>
           <div className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Hello, welcome back</div>
-          <div className="relative">
-            <button
-              onClick={() => setShowNameDropdown(!showNameDropdown)}
-              className="flex items-center gap-1 text-base font-extrabold text-amber-400 leading-tight"
-            >
-              <span>{selectedName}</span>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-            </button>
-
-            {showNameDropdown && (
-              <div className={`absolute top-full left-0 mt-1 z-50 min-w-[130px] rounded-xl shadow-xl border ${theme === 'light' ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'} p-1 space-y-0.5`}>
-                {NAME_OPTIONS.map((name) => (
-                  <button
-                    key={name}
-                    onClick={() => {
-                      setSelectedName(name);
-                      setShowNameDropdown(false);
-                    }}
-                    className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                      selectedName === name 
-                        ? 'bg-amber-500/20 text-amber-400' 
-                        : 'text-slate-400 hover:text-white hover:bg-slate-800'
-                    }`}
-                  >
-                    {name}
-                  </button>
-                ))}
-              </div>
-            )}
+          <div className="text-base font-extrabold text-amber-400 leading-tight">
+            {selectedName}
           </div>
         </div>
 
