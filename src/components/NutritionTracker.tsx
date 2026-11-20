@@ -3,22 +3,20 @@ import { useFitness } from '../context/FitnessContext';
 import { AFFORDABLE_PROTEIN_PILLARS } from '../data/historicalData';
 import { 
   Flame, 
-  Target, 
-  Droplets, 
-  Plus, 
-  Wallet, 
+  ChevronLeft,
+  ChevronRight,
   Calendar, 
   Sparkles,
   Camera,
-  Check
+  Trash2
 } from 'lucide-react';
 import { FoodItem } from '../types/fitness';
-import { getSmartBudgetMealSuggestions, parseQuickIndianMeal } from '../utils/aiAdvisor';
+import { parseQuickIndianMeal } from '../utils/aiAdvisor';
+import { getFormattedDate, getISODate } from '../utils/dateUtils';
 
 export const NutritionTracker: React.FC = () => {
-  const { calorieProfile, nutritionLogs, addFoodLog } = useFitness();
+  const { calorieProfile, nutritionLogs, addFoodLog, selectedDate, setSelectedDate } = useFitness();
 
-  const [selectedDayIndex, setSelectedDayIndex] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<'daily' | 'ai-scanner'>('daily');
 
   // Manual food form state
@@ -31,20 +29,36 @@ export const NutritionTracker: React.FC = () => {
   const [aiDetectedMeal, setAiDetectedMeal] = useState<any>(null);
   const [isAiScanning, setIsAiScanning] = useState(false);
 
-  const currentDay = nutritionLogs[selectedDayIndex] || nutritionLogs[0];
+  // Day-wise Navigation
+  const handleShiftDay = (delta: number) => {
+    const d = new Date(selectedDate + 'T12:00:00');
+    d.setDate(d.getDate() + delta);
+    setSelectedDate(getISODate(d));
+  };
 
-  // Calculate totals
+  const isToday = selectedDate === getISODate(new Date());
+
+  // Find the exact log for the selected calendar day
+  const currentDay = nutritionLogs.find(l => l.date === selectedDate) || {
+    id: `nutr-${selectedDate}`,
+    date: selectedDate,
+    targetCalories: calorieProfile.cuttingTarget,
+    targetProtein: calorieProfile.proteinTargetMin,
+    waterIntakeL: 2.5,
+    waterTargetL: 3.5,
+    meals: []
+  };
+
+  // Calculate day-specific totals
   let totalCalories = 0;
   let totalProtein = 0;
 
-  if (currentDay) {
-    currentDay.meals.forEach(m => {
-      m.items.forEach(i => {
-        totalCalories += i.calories || 0;
-        totalProtein += i.protein || 0;
-      });
+  currentDay.meals.forEach(m => {
+    m.items.forEach(i => {
+      totalCalories += i.calories || 0;
+      totalProtein += i.protein || 0;
     });
-  }
+  });
 
   const proteinRemaining = Math.max(0, calorieProfile.proteinTargetMin - totalProtein);
   const caloriesRemaining = Math.max(0, calorieProfile.cuttingTarget - totalCalories);
@@ -87,7 +101,7 @@ export const NutritionTracker: React.FC = () => {
       newItem.rawOrCooked = 'na';
     }
 
-    addFoodLog(currentDay.date, 'Dinner', newItem);
+    addFoodLog(selectedDate, 'Dinner', newItem);
   };
 
   const handleAddManualFood = (e: React.FormEvent) => {
@@ -106,7 +120,7 @@ export const NutritionTracker: React.FC = () => {
       rawOrCooked: 'cooked'
     };
 
-    addFoodLog(currentDay.date, 'Dinner', newItem);
+    addFoodLog(selectedDate, 'Dinner', newItem);
     setFoodName('');
     setFoodCalories('');
     setFoodProtein('');
@@ -139,7 +153,7 @@ export const NutritionTracker: React.FC = () => {
       rawOrCooked: 'cooked'
     };
 
-    addFoodLog(currentDay.date, 'Dinner', newItem);
+    addFoodLog(selectedDate, 'Dinner', newItem);
     setAiDetectedMeal(null);
     setAiMealPrompt('');
     setActiveTab('daily');
@@ -147,56 +161,78 @@ export const NutritionTracker: React.FC = () => {
 
   return (
     <div className="space-y-4 pb-8">
-      {/* Header Tabs: Daily Log vs AI Meal Scanner */}
-      <div className="flex items-center justify-between bg-slate-900 border border-slate-800 p-2.5 rounded-2xl">
-        <h1 className="text-lg font-bold text-white flex items-center gap-1.5 px-2">
-          <Flame className="w-5 h-5 text-amber-400" /> Nutrition
-        </h1>
+      {/* Day-Wise Real Calendar Header Strip */}
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900 border border-slate-800 p-3 rounded-2xl">
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => handleShiftDay(-1)}
+            className="p-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300"
+            title="Previous Day"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <div className="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl text-xs font-semibold text-white">
+            <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+            <span>{getFormattedDate(new Date(selectedDate + 'T12:00:00'))}</span>
+            {isToday && (
+              <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.2 rounded font-bold">
+                TODAY
+              </span>
+            )}
+          </div>
+          <button
+            onClick={() => handleShiftDay(1)}
+            className="p-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300"
+            title="Next Day"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
 
         <div className="flex gap-1 bg-slate-950 p-1 rounded-xl">
           <button
             onClick={() => setActiveTab('daily')}
-            className={`px-3 py-1 rounded-lg text-xs font-semibold ${
+            className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
               activeTab === 'daily' ? 'bg-amber-600 text-white' : 'text-slate-400'
             }`}
           >
-            Daily Tracker
+            Day's Diet
           </button>
           <button
             onClick={() => setActiveTab('ai-scanner')}
-            className={`px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 ${
+            className={`px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition ${
               activeTab === 'ai-scanner' ? 'bg-indigo-600 text-white' : 'text-amber-400'
             }`}
           >
-            <Sparkles className="w-3 h-3" /> AI Food Scan
+            <Sparkles className="w-3 h-3" /> AI Scan
           </button>
         </div>
       </div>
 
-      {/* 3 Status Cards */}
+      {/* 3 Day-Specific Score Cards */}
       <div className="grid grid-cols-3 gap-2.5">
         <div className="bg-slate-900 border border-slate-800 p-3 rounded-2xl text-center">
-          <div className="text-[11px] text-slate-400">Calories</div>
-          <div className="text-lg font-extrabold text-white font-mono">{totalCalories}</div>
-          <div className="text-[10px] text-amber-400">{caloriesRemaining} left</div>
+          <div className="text-[11px] text-slate-400 font-medium">Calories</div>
+          <div className="text-xl font-extrabold text-white font-mono">{totalCalories}</div>
+          <div className="text-[10px] text-amber-400">{caloriesRemaining} kcal left</div>
         </div>
 
         <div className="bg-slate-900 border border-slate-800 p-3 rounded-2xl text-center">
-          <div className="text-[11px] text-slate-400">Protein</div>
-          <div className="text-lg font-extrabold text-cyan-400 font-mono">{Math.round(totalProtein)}g</div>
+          <div className="text-[11px] text-slate-400 font-medium">Protein</div>
+          <div className="text-xl font-extrabold text-cyan-400 font-mono">{Math.round(totalProtein)}g</div>
           <div className="text-[10px] text-slate-400">/ 140g target</div>
         </div>
 
         <div className="bg-slate-900 border border-slate-800 p-3 rounded-2xl text-center">
-          <div className="text-[11px] text-slate-400">Water</div>
-          <div className="text-lg font-extrabold text-blue-400 font-mono">{currentDay.waterIntakeL}L</div>
+          <div className="text-[11px] text-slate-400 font-medium">Water</div>
+          <div className="text-xl font-extrabold text-blue-400 font-mono">{currentDay.waterIntakeL}L</div>
           <div className="text-[10px] text-slate-400">/ 3.5L goal</div>
         </div>
       </div>
 
       {activeTab === 'daily' && (
         <div className="space-y-4">
-          {/* Quick-Log Budget Staples Bar */}
+          {/* Quick-Log Affordable Staples (1-Tap into Selected Day) */}
           <div className="bg-slate-900 border border-slate-800 p-3 rounded-2xl">
             <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider block mb-2">
               1-Tap Affordable Protein Staples (₹10–₹25)
@@ -206,7 +242,7 @@ export const NutritionTracker: React.FC = () => {
                 <button
                   key={idx}
                   onClick={() => handleQuickAddAffordable(p)}
-                  className="p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-left transition"
+                  className="p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-left transition active:scale-95"
                 >
                   <div className="text-xs font-bold text-white truncate">{p.food}</div>
                   <div className="text-[10px] text-emerald-400 font-mono">{p.costPer100g}</div>
@@ -215,32 +251,38 @@ export const NutritionTracker: React.FC = () => {
             </div>
           </div>
 
-          {/* Logged Meals List */}
+          {/* Day's Meals List */}
           <div className="space-y-2.5">
-            {currentDay.meals.map((meal, mIdx) => (
-              <div key={mIdx} className="bg-slate-900 border border-slate-800 rounded-2xl p-3.5">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-800 mb-2">
-                  <span className="font-bold text-sm text-white">{meal.mealName}</span>
-                  <span className="text-xs font-mono text-cyan-400">
-                    {Math.round(meal.items.reduce((s, i) => s + (i.protein || 0), 0))}g protein
-                  </span>
-                </div>
-
-                <div className="space-y-1.5">
-                  {meal.items.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between text-xs py-0.5">
-                      <span className="text-slate-300 truncate">{item.name}</span>
-                      <span className="font-mono text-slate-400">
-                        {item.calories} kcal • <strong className="text-cyan-400">{item.protein}g P</strong>
-                      </span>
-                    </div>
-                  ))}
-                </div>
+            {currentDay.meals.length === 0 ? (
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center text-slate-400 text-xs">
+                No meals logged yet for this date. Tap staples above or enter below.
               </div>
-            ))}
+            ) : (
+              currentDay.meals.map((meal, mIdx) => (
+                <div key={mIdx} className="bg-slate-900 border border-slate-800 rounded-2xl p-3.5">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-800 mb-2">
+                    <span className="font-bold text-sm text-white">{meal.mealName}</span>
+                    <span className="text-xs font-mono text-cyan-400 font-bold">
+                      {Math.round(meal.items.reduce((s, i) => s + (i.protein || 0), 0))}g protein
+                    </span>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    {meal.items.map((item) => (
+                      <div key={item.id} className="flex items-center justify-between text-xs py-1">
+                        <span className="text-slate-200 font-medium truncate">{item.name}</span>
+                        <span className="font-mono text-slate-400">
+                          {item.calories} kcal • <strong className="text-cyan-400">{item.protein}g P</strong>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
 
-          {/* Quick Add Food Simple Form */}
+          {/* Quick Add Food Simple Form for this selected date */}
           <form onSubmit={handleAddManualFood} className="bg-slate-900 border border-slate-800 p-3.5 rounded-2xl flex flex-wrap gap-2 items-center">
             <input
               type="text"
@@ -268,9 +310,9 @@ export const NutritionTracker: React.FC = () => {
             />
             <button
               type="submit"
-              className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs"
+              className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs"
             >
-              Add
+              Add to Day
             </button>
           </form>
         </div>
@@ -314,7 +356,7 @@ export const NutritionTracker: React.FC = () => {
                 onClick={handleApplyAiMealToLog}
                 className="w-full py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg"
               >
-                Save to Log
+                Save to {selectedDate} Log
               </button>
             </div>
           )}
