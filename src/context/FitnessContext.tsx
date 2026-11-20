@@ -32,6 +32,7 @@ import {
   DaySplitMapping 
 } from '../utils/dateUtils';
 import { DailyStepRecord } from '../types/fitness';
+import { apiSync } from '../utils/apiSync';
 
 interface FitnessContextType {
   profile: UserProfile;
@@ -334,6 +335,23 @@ export const FitnessProvider: React.FC<{ children: React.ReactNode }> = ({ child
     localStorage.setItem('gym_daily_steps', JSON.stringify(dailySteps));
   }, [dailySteps]);
 
+  // Background initial fetch from Neon DB if available (non-blocking fallback)
+  useEffect(() => {
+    // 1. Fetch remote steps
+    apiSync.getSteps().then((remoteSteps) => {
+      if (remoteSteps && remoteSteps.length > 0) {
+        setDailySteps(remoteSteps);
+      }
+    });
+
+    // 2. Fetch remote PRs
+    apiSync.getPrs().then((remotePrs) => {
+      if (remotePrs && remotePrs.length > 0) {
+        setPrs(remotePrs);
+      }
+    });
+  }, []);
+
   const updateDailySteps = (date: string, steps: number) => {
     setDailySteps((prev) => {
       const existingIdx = prev.findIndex((s) => s.date === date);
@@ -344,6 +362,8 @@ export const FitnessProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
       return [...prev, { date, steps }].sort((a, b) => a.date.localeCompare(b.date));
     });
+    // Async background sync to Neon
+    apiSync.saveSteps(date, steps);
   };
 
   // Real Calendar synchronization
@@ -422,14 +442,17 @@ export const FitnessProvider: React.FC<{ children: React.ReactNode }> = ({ child
       ...record
     };
     setPrs((prev) => [newPr, ...prev]);
+    apiSync.savePr(newPr);
   };
 
   const updatePr = (updatedRecord: PersonalRecord) => {
     setPrs((prev) => prev.map((item) => (item.id === updatedRecord.id ? updatedRecord : item)));
+    apiSync.savePr(updatedRecord);
   };
 
   const deletePr = (id: string) => {
     setPrs((prev) => prev.filter((item) => item.id !== id));
+    apiSync.deletePr(id);
   };
 
   const addFoodLog = (date: string, mealName: any, item: any) => {
