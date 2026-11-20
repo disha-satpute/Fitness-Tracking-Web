@@ -1,7 +1,7 @@
 import { neon } from '@neondatabase/serverless';
-import { PersonalRecord, DailyStepRecord, WorkoutSession } from '../types/fitness';
+import { PersonalRecord, DailyStepRecord, WorkoutSession, DailyNutritionLog } from '../types/fitness';
 
-// In Vite, client env variables start with VITE_
+// Use pooler endpoint for resilient HTTP connections across all network environments
 const connectionString = 
   import.meta.env.VITE_NEON_DATABASE_URL || 
   'postgresql://neondb_owner:npg_7WwYgCcjfF0t@ep-cold-fire-b3w32043-pooler.c-4.ap-southeast-1.aws.neon.tech/neondb?sslmode=require';
@@ -121,6 +121,56 @@ export const apiSync = {
       return true;
     } catch (err) {
       console.error('Failed to delete PR from Neon:', err);
+      return false;
+    }
+  },
+
+  // Daily Nutrition
+  async getNutritionLogs(): Promise<DailyNutritionLog[] | null> {
+    if (!sql) return null;
+    try {
+      const rows = await sql`SELECT * FROM daily_nutrition ORDER BY date DESC;`;
+      return rows.map((r: any) => ({
+        id: r.id,
+        date: r.date,
+        targetCalories: r.target_calories || 1940,
+        targetProtein: r.target_protein || 140,
+        waterIntakeL: parseFloat(r.water_intake_l) || 2.5,
+        waterTargetL: parseFloat(r.water_target_l) || 3.5,
+        meals: Array.isArray(r.meals) ? r.meals : [],
+        notes: r.notes || ''
+      }));
+    } catch (err) {
+      console.error('Failed to get nutrition logs from Neon:', err);
+      return null;
+    }
+  },
+
+  async saveNutritionLog(log: DailyNutritionLog): Promise<boolean> {
+    if (!sql) return false;
+    try {
+      const mealsJson = JSON.stringify(log.meals || []);
+      await sql`
+        INSERT INTO daily_nutrition (
+          id, date, target_calories, target_protein, water_intake_l, water_target_l, meals, notes, updated_at
+        ) VALUES (
+          ${log.id}, ${log.date}, ${log.targetCalories || 1940}, ${log.targetProtein || 140},
+          ${log.waterIntakeL || 2.5}, ${log.waterTargetL || 3.5}, ${mealsJson}::jsonb,
+          ${log.notes || ''}, CURRENT_TIMESTAMP
+        )
+        ON CONFLICT (date) DO UPDATE SET
+          target_calories = EXCLUDED.target_calories,
+          target_protein = EXCLUDED.target_protein,
+          water_intake_l = EXCLUDED.water_intake_l,
+          water_target_l = EXCLUDED.water_target_l,
+          meals = EXCLUDED.meals,
+          notes = EXCLUDED.notes,
+          updated_at = CURRENT_TIMESTAMP;
+      `;
+      console.log(`✅ [Neon Live] Nutrition logged for ${log.date}`);
+      return true;
+    } catch (err) {
+      console.error('Failed to save nutrition to Neon:', err);
       return false;
     }
   },

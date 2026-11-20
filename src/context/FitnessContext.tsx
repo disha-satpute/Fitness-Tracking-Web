@@ -350,6 +350,13 @@ export const FitnessProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setPrs(remotePrs);
       }
     });
+
+    // 3. Fetch remote Nutrition logs
+    apiSync.getNutritionLogs().then((remoteNutrition) => {
+      if (remoteNutrition && remoteNutrition.length > 0) {
+        setNutritionLogs(remoteNutrition);
+      }
+    });
   }, []);
 
   const updateDailySteps = (date: string, steps: number) => {
@@ -457,7 +464,10 @@ export const FitnessProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const addFoodLog = (date: string, mealName: any, item: any) => {
     setNutritionLogs((prev) => {
+      let updatedDay: DailyNutritionLog;
       const dayIndex = prev.findIndex((d) => d.date === date);
+      let newLogs: DailyNutritionLog[];
+
       if (dayIndex >= 0) {
         const copy = [...prev];
         const day = { ...copy[dayIndex] };
@@ -468,21 +478,24 @@ export const FitnessProvider: React.FC<{ children: React.ReactNode }> = ({ child
           day.meals.push({ mealName, items: [item] });
         }
         copy[dayIndex] = day;
-        return copy;
+        updatedDay = day;
+        newLogs = copy;
       } else {
-        return [
-          {
-            id: `nutr-${Date.now()}`,
-            date,
-            targetCalories: calorieProfile.cuttingTarget,
-            targetProtein: calorieProfile.proteinTargetMin,
-            waterIntakeL: 2.0,
-            waterTargetL: 3.5,
-            meals: [{ mealName, items: [item] }]
-          },
-          ...prev
-        ];
+        updatedDay = {
+          id: `nutr-${Date.now()}`,
+          date,
+          targetCalories: calorieProfile.cuttingTarget,
+          targetProtein: calorieProfile.proteinTargetMin,
+          waterIntakeL: 2.0,
+          waterTargetL: 3.5,
+          meals: [{ mealName, items: [item] }]
+        };
+        newLogs = [updatedDay, ...prev];
       }
+
+      // Sync to Neon
+      apiSync.saveNutritionLog(updatedDay);
+      return newLogs;
     });
   };
 
