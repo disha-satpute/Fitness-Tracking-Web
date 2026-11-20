@@ -530,3 +530,13 @@ export const INITIAL_MEASUREMENTS: MeasurementRecord[] = [
     notes: 'Baseline'
   }
 ];
+
+export const INITIAL_STEP_RECORDS = [
+  { date: '2026-11-14', steps: 7850 },
+  { date: '2026-11-15', steps: 8320 },
+  { date: '2026-11-16', steps: 6940 },
+  { date: '2026-11-17', steps: 9150 },
+  { date: '2026-11-18', steps: 8400 },
+  { date: '2026-11-19', steps: 7600 },
+  { date: '2026-11-20', steps: 8420 }
+];

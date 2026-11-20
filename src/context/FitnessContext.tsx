@@ -22,7 +22,8 @@ import {
   HISTORICAL_RECOVERY_LOGS,
   SUPPLEMENT_STACK,
   HISTORICAL_PROGRESS_PHOTOS,
-  INITIAL_MEASUREMENTS
+  INITIAL_MEASUREMENTS,
+  INITIAL_STEP_RECORDS
 } from '../data/historicalData';
 import { 
   getISODate, 
@@ -30,6 +31,7 @@ import {
   WEEKLY_TRAINER_SCHEDULE, 
   DaySplitMapping 
 } from '../utils/dateUtils';
+import { DailyStepRecord } from '../types/fitness';
 
 interface FitnessContextType {
   profile: UserProfile;
@@ -45,6 +47,8 @@ interface FitnessContextType {
   addPr: (record: Omit<PersonalRecord, 'id'>) => void;
   updatePr: (updatedRecord: PersonalRecord) => void;
   deletePr: (id: string) => void;
+  dailySteps: DailyStepRecord[];
+  updateDailySteps: (date: string, steps: number) => void;
   nutritionLogs: DailyNutritionLog[];
   addFoodLog: (date: string, meal: any, item: any) => void;
   recoveryLogs: RecoveryLog[];
@@ -321,6 +325,27 @@ export const FitnessProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return saved ? JSON.parse(saved) : INITIAL_MEASUREMENTS;
   });
 
+  const [dailySteps, setDailySteps] = useState<DailyStepRecord[]>(() => {
+    const saved = localStorage.getItem('gym_daily_steps');
+    return saved ? JSON.parse(saved) : INITIAL_STEP_RECORDS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('gym_daily_steps', JSON.stringify(dailySteps));
+  }, [dailySteps]);
+
+  const updateDailySteps = (date: string, steps: number) => {
+    setDailySteps((prev) => {
+      const existingIdx = prev.findIndex((s) => s.date === date);
+      if (existingIdx >= 0) {
+        const copy = [...prev];
+        copy[existingIdx] = { date, steps };
+        return copy;
+      }
+      return [...prev, { date, steps }].sort((a, b) => a.date.localeCompare(b.date));
+    });
+  };
+
   // Real Calendar synchronization
   const [selectedDate, setSelectedDate] = useState<string>(() => {
     return getISODate(new Date());
@@ -488,6 +513,8 @@ export const FitnessProvider: React.FC<{ children: React.ReactNode }> = ({ child
         addPr,
         updatePr,
         deletePr,
+        dailySteps,
+        updateDailySteps,
         nutritionLogs,
         addFoodLog,
         recoveryLogs,

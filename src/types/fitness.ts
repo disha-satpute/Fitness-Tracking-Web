@@ -123,6 +123,11 @@ export interface DailyNutritionLog {
   estimatedStatus?: StatusTag;
 }
 
+export interface DailyStepRecord {
+  date: string;
+  steps: number;
+}
+
 export interface PRHistoryEntry {
   id: string;
   date: string;
