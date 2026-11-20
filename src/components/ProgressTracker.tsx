@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import { useFitness } from '../context/FitnessContext';
 import { 
   TrendingUp, 
-  Plus, 
-  Calendar, 
   Trophy
 } from 'lucide-react';
 import { 
@@ -17,10 +15,10 @@ import {
   ReferenceLine 
 } from 'recharts';
 
-export const ProgressTracker: React.FC = () => {
+export const ProgressTracker: React.FC<{ initialSubTab?: 'weight' | 'prs' }> = ({ initialSubTab = 'weight' }) => {
   const { weightRecords, addWeightRecord, prs } = useFitness();
 
-  const [activeTab, setActiveTab] = useState<'weight' | 'prs'>('weight');
+  const [activeTab, setActiveTab] = useState<'weight' | 'prs'>(initialSubTab);
 
   // Form states
   const [newDate, setNewDate] = useState('2026-11-20');
@@ -46,16 +44,20 @@ export const ProgressTracker: React.FC = () => {
 
   return (
     <div className="space-y-4 pb-8">
-      {/* Header Tabs: Weight vs PRs */}
+      {/* Header Tabs: Scale Weight vs Hall of PRs */}
       <div className="flex items-center justify-between bg-slate-900 border border-slate-800 p-2.5 rounded-2xl">
         <h1 className="text-lg font-bold text-white flex items-center gap-1.5 px-2">
-          <TrendingUp className="w-5 h-5 text-emerald-400" /> Progress & Records
+          {activeTab === 'weight' ? (
+            <><TrendingUp className="w-5 h-5 text-emerald-400" /> Bodyweight Progress</>
+          ) : (
+            <><Trophy className="w-5 h-5 text-amber-400" /> Hall of PRs</>
+          )}
         </h1>
 
         <div className="flex gap-1 bg-slate-950 p-1 rounded-xl">
           <button
             onClick={() => setActiveTab('weight')}
-            className={`px-3 py-1 rounded-lg text-xs font-semibold ${
+            className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
               activeTab === 'weight' ? 'bg-emerald-600 text-white' : 'text-slate-400'
             }`}
           >
@@ -63,11 +65,11 @@ export const ProgressTracker: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveTab('prs')}
-            className={`px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 ${
+            className={`px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition ${
               activeTab === 'prs' ? 'bg-amber-600 text-white' : 'text-slate-400'
             }`}
           >
-            <Trophy className="w-3 h-3" /> Hall of PRs
+            <Trophy className="w-3.5 h-3.5" /> Hall of PRs
           </button>
         </div>
       </div>
@@ -152,7 +154,7 @@ export const ProgressTracker: React.FC = () => {
 
                 <div className="text-right">
                   <div className="font-extrabold text-amber-400 font-mono text-base">{pr.recordValue}</div>
-                  <div className="text-[10px] text-slate-500">{pr.gymName}</div>
+                  <div className="text-[10px] text-slate-500 font-mono">{pr.date}</div>
                 </div>
               </div>
             ))}

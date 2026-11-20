@@ -9,15 +9,15 @@ import {
   Dumbbell, 
   Flame, 
   TrendingUp, 
-  Timer,
-  Sun,
-  Moon
+  Sun, 
+  Moon 
 } from 'lucide-react';
 
 const NAME_OPTIONS = ['Aaduu', 'Aadesh', 'Handsome', 'Aadyy'];
 
 const MainApp: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const [progressSubTab, setProgressSubTab] = useState<'weight' | 'prs'>('weight');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
   // Random / anonymous name rotation without select dropdown
@@ -40,6 +40,13 @@ const MainApp: React.FC = () => {
 
   const toggleTheme = () => {
     setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
+  const handleNavigateTab = (tab: string, subTab?: string) => {
+    setActiveTab(tab);
+    if (tab === 'progress' && subTab) {
+      setProgressSubTab(subTab as 'weight' | 'prs');
+    }
   };
 
   // 4 Core Actionable Tabs
@@ -83,7 +90,7 @@ const MainApp: React.FC = () => {
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id)}
+                  onClick={() => handleNavigateTab(item.id)}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition ${
                     isActive
                       ? 'bg-indigo-600 text-white shadow-sm'
@@ -149,13 +156,13 @@ const MainApp: React.FC = () => {
 
       {/* Main View Area */}
       <main className="flex-1 p-3 sm:p-5 max-w-5xl mx-auto w-full pb-20 md:pb-6">
-        {activeTab === 'dashboard' && <Dashboard onNavigateTab={(tab) => setActiveTab(tab)} />}
+        {activeTab === 'dashboard' && <Dashboard onNavigateTab={handleNavigateTab} />}
         {activeTab === 'workouts' && <WorkoutManager />}
         {activeTab === 'nutrition' && <NutritionTracker />}
-        {activeTab === 'progress' && <ProgressTracker />}
+        {activeTab === 'progress' && <ProgressTracker key={progressSubTab} initialSubTab={progressSubTab} />}
       </main>
 
-      {/* Mobile Bottom Navigation Bar (4 Core Tabs - Fast & Ergonomic) */}
+      {/* Mobile Bottom Navigation Bar (4 Core Tabs) */}
       <nav 
         className={`md:hidden fixed bottom-0 left-0 right-0 z-40 ${theme === 'light' ? 'bg-white/95 border-slate-200' : 'bg-slate-900/95 border-slate-800'} backdrop-blur-lg border-t px-2 py-1 shadow-2xl`}
         style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
@@ -167,7 +174,7 @@ const MainApp: React.FC = () => {
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => handleNavigateTab(item.id)}
                 className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition duration-150 touch-manipulation active:scale-95 ${
                   isActive ? 'text-amber-500 font-bold' : 'text-slate-400 hover:text-slate-200'
                 }`}

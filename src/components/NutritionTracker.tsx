@@ -235,7 +235,7 @@ export const NutritionTracker: React.FC = () => {
           {/* Quick-Log Affordable Staples (1-Tap into Selected Day) */}
           <div className="bg-slate-900 border border-slate-800 p-3 rounded-2xl">
             <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider block mb-2">
-              1-Tap Affordable Protein Staples (₹10–₹25)
+              1-Tap Affordable Protein Staples
             </span>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {AFFORDABLE_PROTEIN_PILLARS.slice(0, 4).map((p, idx) => (

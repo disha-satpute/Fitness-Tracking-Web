@@ -8,9 +8,7 @@ import {
   ChevronLeft,
   ChevronRight,
   BedDouble,
-  Zap,
-  ChevronDown,
-  ChevronUp
+  Zap
 } from 'lucide-react';
 import { SetEntry } from '../types/fitness';
 import { getFormattedDate, getISODate } from '../utils/dateUtils';
@@ -20,16 +18,13 @@ export const WorkoutManager: React.FC = () => {
   const { 
     todaysWorkout, 
     updateTodaysWorkout, 
-    gyms, 
-    activeGymId, 
-    setActiveGymId,
-    startRestTimer,
-    restTimerSeconds,
-    stopRestTimer,
-    selectedDate,
-    setSelectedDate,
-    currentDaySchedule,
-    recoveryLogs
+    startRestTimer, 
+    restTimerSeconds, 
+    stopRestTimer, 
+    selectedDate, 
+    setSelectedDate, 
+    currentDaySchedule, 
+    recoveryLogs 
   } = useFitness();
 
   const [expandedAiExerciseId, setExpandedAiExerciseId] = useState<string | null>(null);
@@ -150,24 +145,13 @@ export const WorkoutManager: React.FC = () => {
         </div>
       </div>
 
-      {/* Routine Title */}
-      <div className="px-1 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-extrabold text-white flex items-center gap-2">
-            <Dumbbell className="w-5 h-5 text-indigo-400" />
-            {todaysWorkout.splitName}
-          </h1>
-          <p className="text-xs text-slate-400">{currentDaySchedule.muscleGroups}</p>
-        </div>
-        <select 
-          value={activeGymId} 
-          onChange={(e) => setActiveGymId(e.target.value)}
-          className="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-xs text-slate-300"
-        >
-          {gyms.map(g => (
-            <option key={g.id} value={g.id}>{g.name}</option>
-          ))}
-        </select>
+      {/* Routine Title without Old/New Gym dropdown */}
+      <div className="px-1">
+        <h1 className="text-xl font-extrabold text-white flex items-center gap-2">
+          <Dumbbell className="w-5 h-5 text-indigo-400" />
+          {todaysWorkout.splitName}
+        </h1>
+        <p className="text-xs text-slate-400">{currentDaySchedule.muscleGroups}</p>
       </div>
 
       {/* Exercise Set Cards */}

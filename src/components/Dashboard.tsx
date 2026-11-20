@@ -1,26 +1,24 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useFitness } from '../context/FitnessContext';
 import { 
   Dumbbell, 
   Flame, 
   TrendingUp, 
-  Target, 
   Calendar, 
-  Timer,
-  CheckCircle2, 
+  Timer, 
   ChevronRight, 
-  Clock,
   ChevronLeft,
   BedDouble,
   Trophy
 } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
-import { getFormattedDate, getFormattedTime, getISODate } from '../utils/dateUtils';
+import { getFormattedDate, getISODate } from '../utils/dateUtils';
 
-export const Dashboard: React.FC<{ onNavigateTab: (tab: string) => void }> = ({ onNavigateTab }) => {
+export const Dashboard: React.FC<{ 
+  onNavigateTab: (tab: string, subTab?: string) => void 
+}> = ({ onNavigateTab }) => {
   const { 
     profile, 
-    calorieProfile, 
     weightRecords, 
     prs, 
     todaysWorkout, 
@@ -157,7 +155,7 @@ export const Dashboard: React.FC<{ onNavigateTab: (tab: string) => void }> = ({ 
 
         {/* Weight */}
         <div 
-          onClick={() => onNavigateTab('progress')} 
+          onClick={() => onNavigateTab('progress', 'weight')} 
           className="cursor-pointer bg-slate-900 border border-slate-800 hover:border-emerald-500/50 p-4 rounded-2xl transition"
         >
           <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
@@ -187,7 +185,7 @@ export const Dashboard: React.FC<{ onNavigateTab: (tab: string) => void }> = ({ 
                 <Dumbbell className="w-4 h-4 text-indigo-400" />
                 {todaysWorkout.splitName}
               </h2>
-              <span className="text-xs text-slate-400">New Gym (Up to 40kg DBs)</span>
+              <span className="text-xs text-slate-400">Heavy Compound Overload</span>
             </div>
             <button
               onClick={() => onNavigateTab('workouts')}
@@ -259,15 +257,15 @@ export const Dashboard: React.FC<{ onNavigateTab: (tab: string) => void }> = ({ 
             </div>
           </div>
 
-          {/* Quick PR Highlights */}
+          {/* Key PR Highlights with direct redirect to Hall of PRs */}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
             <div className="flex items-center justify-between mb-2.5">
               <span className="text-xs font-bold text-white flex items-center gap-1.5">
                 <Trophy className="w-3.5 h-3.5 text-amber-400" /> Key Personal Records
               </span>
               <button 
-                onClick={() => onNavigateTab('progress')}
-                className="text-xs text-indigo-400 hover:text-indigo-300"
+                onClick={() => onNavigateTab('progress', 'prs')}
+                className="text-xs font-semibold text-amber-400 hover:text-amber-300 flex items-center gap-0.5"
               >
                 All →
               </button>
@@ -275,7 +273,11 @@ export const Dashboard: React.FC<{ onNavigateTab: (tab: string) => void }> = ({ 
 
             <div className="grid grid-cols-2 gap-2 text-xs">
               {prs.slice(0, 4).map((pr) => (
-                <div key={pr.id} className="p-2 rounded-xl bg-slate-950 border border-slate-800">
+                <div 
+                  key={pr.id} 
+                  onClick={() => onNavigateTab('progress', 'prs')}
+                  className="p-2 rounded-xl bg-slate-950 border border-slate-800 cursor-pointer hover:border-amber-500/50 transition"
+                >
                   <div className="text-[10px] text-slate-400 truncate">{pr.exerciseName}</div>
                   <div className="font-bold text-amber-400 font-mono mt-0.5">{pr.recordValue}</div>
                 </div>
