@@ -53,7 +53,7 @@ export const getSmartOverloadPrediction = (
       targetReps: '8 reps',
       targetRir: 2,
       fatigueInsight: 'Quad recovery is adequate. Remember to maintain full depth without bouncing.',
-      reasoning: 'Historical mark was 250 kg × 7 in the New Gym with 2 RIR in reserve. Adding 1 rep reaches progressive overload standard.'
+      reasoning: 'Historical mark was 250 kg × 7 with 2 RIR in reserve. Adding 1 rep reaches progressive overload standard.'
     };
   }
 
@@ -112,7 +112,6 @@ export const getSmartOverloadPrediction = (
 export interface MealRecommendation {
   id: string;
   title: string;
-  estimatedCost: string;
   proteinYield: number;
   calories: number;
   items: string[];
@@ -126,20 +125,18 @@ export const getSmartBudgetMealSuggestions = (
   return [
     {
       id: 'opt-1',
-      title: 'Raw Soybean Curry + Cow Milk (Ultra Value Champion)',
-      estimatedCost: '₹22 - ₹28',
+      title: 'Raw Soybean Curry + Cow Milk',
       proteinYield: 26,
       calories: 370,
       items: [
         '50g Raw Soybean (boiled & cooked into curry) → ~18g Protein',
         '250ml Whole Cow Milk → ~8g Protein'
       ],
-      explanation: 'Delivers 26g complete protein for under ₹30 without spending on expensive whey powder.'
+      explanation: 'Delivers 26g complete protein easily from simple kitchen staples.'
     },
     {
       id: 'opt-2',
       title: 'Boiled Eggs & Whole Cow Milk Fast Prep',
-      estimatedCost: '₹30 - ₹35',
       proteinYield: 26,
       calories: 365,
       items: [
@@ -151,7 +148,6 @@ export const getSmartBudgetMealSuggestions = (
     {
       id: 'opt-3',
       title: 'High-Protein Oats + Curd Bowl',
-      estimatedCost: '₹40 - ₹45',
       proteinYield: 22,
       calories: 340,
       items: [

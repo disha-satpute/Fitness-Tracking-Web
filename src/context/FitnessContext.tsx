@@ -43,6 +43,8 @@ interface FitnessContextType {
   setActiveGymId: (id: string) => void;
   prs: PersonalRecord[];
   addPr: (record: Omit<PersonalRecord, 'id'>) => void;
+  updatePr: (updatedRecord: PersonalRecord) => void;
+  deletePr: (id: string) => void;
   nutritionLogs: DailyNutritionLog[];
   addFoodLog: (date: string, meal: any, item: any) => void;
   recoveryLogs: RecoveryLog[];
@@ -206,7 +208,7 @@ const buildWorkoutForDay = (dateStr: string): WorkoutSession => {
         muscleGroup: 'Quads',
         equipment: '45° Plate Loaded Sled',
         gymId: 'gym-new',
-        historicalBest: '250 kg × 7 @ 2 RIR (New Gym)',
+        historicalBest: '250 kg × 7 @ 2 RIR',
         lastPerformance: '250 kg × 7',
         sets: [
           { setNumber: 1, weight: 140, unit: 'kg' as const, reps: 13, rir: 3, setType: 'warmup' as const, completed: true },
@@ -397,6 +399,14 @@ export const FitnessProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setPrs((prev) => [newPr, ...prev]);
   };
 
+  const updatePr = (updatedRecord: PersonalRecord) => {
+    setPrs((prev) => prev.map((item) => (item.id === updatedRecord.id ? updatedRecord : item)));
+  };
+
+  const deletePr = (id: string) => {
+    setPrs((prev) => prev.filter((item) => item.id !== id));
+  };
+
   const addFoodLog = (date: string, mealName: any, item: any) => {
     setNutritionLogs((prev) => {
       const dayIndex = prev.findIndex((d) => d.date === date);
@@ -476,6 +486,8 @@ export const FitnessProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setActiveGymId,
         prs,
         addPr,
+        updatePr,
+        deletePr,
         nutritionLogs,
         addFoodLog,
         recoveryLogs,

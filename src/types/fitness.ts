@@ -123,6 +123,14 @@ export interface DailyNutritionLog {
   estimatedStatus?: StatusTag;
 }
 
+export interface PRHistoryEntry {
+  id: string;
+  date: string;
+  weightKg: number;
+  reps: number | string;
+  notes?: string;
+}
+
 export interface PersonalRecord {
   id: string;
   exerciseName: string;
@@ -136,6 +144,7 @@ export interface PersonalRecord {
   romContext: string; // e.g. "Half ROM context", "Full ROM", "Conventional", "Sumo"
   isPR: boolean;
   notes: string;
+  history?: PRHistoryEntry[];
 }
 
 export interface RecoveryLog {

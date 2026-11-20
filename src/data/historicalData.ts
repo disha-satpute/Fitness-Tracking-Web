@@ -101,22 +101,13 @@ export const HISTORICAL_WEIGHT_RECORDS: WeightRecord[] = [
 
 export const GYMS: GymLocation[] = [
   {
-    id: 'gym-old',
-    name: 'Old Gym',
-    period: 'Up to ~22 Aug 2026',
-    maxDumbbell: '50 lb (~22.7 kg)',
-    smithMachine: true,
-    shoulderPressMachine: true,
-    notes: 'Had Smith machine (Smith squat PR 90-100 kg), dumbbells capped at 50 lb.'
-  },
-  {
-    id: 'gym-new',
-    name: 'New Gym',
-    period: '22 Aug 2026 - Present',
-    maxDumbbell: '35 kg - 40 kg',
+    id: 'gym-main',
+    name: 'Gym',
+    period: 'Current',
+    maxDumbbell: '40 kg',
     smithMachine: false,
     shoulderPressMachine: false,
-    notes: 'Heavy dumbbells up to 40 kg. No Smith machine, no dedicated shoulder press machine.'
+    notes: 'Primary training facility'
   }
 ];
 
@@ -129,11 +120,16 @@ export const HISTORICAL_PRS: PersonalRecord[] = [
     rawWeightKg: 30,
     reps: '9 + 1 assisted',
     date: '2026-10-13',
-    gymId: 'gym-new',
-    gymName: 'New Gym',
+    gymId: 'gym-main',
+    gymName: 'Gym',
     romContext: 'First 9 reps unassisted; slight spotter support on rep 10',
     isPR: true,
-    notes: 'Progressed from 22.5 kg × 10 (11 Sep) -> 30 kg × 9 (29 Sep) -> 30 kg × 9+1 (13 Oct). New gym has 35 kg dumbbells.'
+    notes: 'Progressed from 22.5 kg × 10 -> 30 kg × 9 -> 30 kg × 9+1.',
+    history: [
+      { id: 'h-1-1', date: '2026-08-15', weightKg: 22.5, reps: '10', notes: 'Baseline form' },
+      { id: 'h-1-2', date: '2026-09-20', weightKg: 27.5, reps: '8', notes: 'Solid control' },
+      { id: 'h-1-3', date: '2026-10-02', weightKg: 30, reps: '9', notes: '9 clean unassisted' }
+    ]
   },
   {
     id: 'pr-2',
@@ -142,26 +138,34 @@ export const HISTORICAL_PRS: PersonalRecord[] = [
     recordValue: '260 kg × 7–8 (Half ROM)',
     rawWeightKg: 260,
     reps: '7-8',
-    date: 'Historical',
-    gymId: 'gym-old',
-    gymName: 'Old Gym',
-    romContext: 'Half Range of Motion (Old gym context)',
+    date: '2026-10-18',
+    gymId: 'gym-main',
+    gymName: 'Gym',
+    romContext: 'Half Range of Motion',
     isPR: true,
-    notes: 'Crucial context: Old gym had 250 kg × 13 (half ROM) & 260 kg × 7-8 PR. New gym performance: 250 kg × 7 @ 2 RIR.'
+    notes: '260 kg × 7-8 PR. Working set performance: 250 kg × 7 @ 2 RIR.',
+    history: [
+      { id: 'h-2-1', date: '2026-08-20', weightKg: 200, reps: '10', notes: 'Warmup benchmark' },
+      { id: 'h-2-2', date: '2026-09-28', weightKg: 250, reps: '7', notes: 'Full depth 2 RIR' }
+    ]
   },
   {
     id: 'pr-3',
     exerciseName: 'Conventional Deadlift',
-    muscle: 'Back / Glutes / Hamstrings',
+    muscle: 'Back / Legs',
     recordValue: '110 kg × 1',
     rawWeightKg: 110,
     reps: 1,
     date: '2026-09-12',
-    gymId: 'gym-new',
-    gymName: 'New Gym',
-    romContext: 'Conventional stance (dead stop)',
+    gymId: 'gym-main',
+    gymName: 'Gym',
+    romContext: 'Conventional stance',
     isPR: true,
-    notes: 'First deadlift was 75 kg × 5. Hit 110 kg × 1 on 12 Sep 2026. Glute cramps recorded on 3 Oct.'
+    notes: 'First deadlift was 75 kg × 5. Hit 110 kg × 1 on 12 Sep 2026.',
+    history: [
+      { id: 'h-3-1', date: '2026-07-10', weightKg: 75, reps: '5', notes: 'First session learning form' },
+      { id: 'h-3-2', date: '2026-08-14', weightKg: 95, reps: '3', notes: 'Hook grip milestone' }
+    ]
   },
   {
     id: 'pr-4',
@@ -171,11 +175,14 @@ export const HISTORICAL_PRS: PersonalRecord[] = [
     rawWeightKg: 90,
     reps: 2,
     date: '2026-09-19',
-    gymId: 'gym-new',
-    gymName: 'New Gym',
+    gymId: 'gym-main',
+    gymName: 'Gym',
     romContext: 'Sumo stance',
     isPR: false,
-    notes: 'Tracked separately from Conventional to preserve stance technique.'
+    notes: 'Tracked separately from Conventional.',
+    history: [
+      { id: 'h-4-1', date: '2026-08-30', weightKg: 80, reps: '3', notes: 'Stance adjustment' }
+    ]
   },
   {
     id: 'pr-5',
@@ -184,12 +191,15 @@ export const HISTORICAL_PRS: PersonalRecord[] = [
     recordValue: '90–100 kg × 7–8',
     rawWeightKg: 100,
     reps: '7-8',
-    date: 'Historical',
-    gymId: 'gym-old',
-    gymName: 'Old Gym',
-    romContext: 'Smith Machine Track',
+    date: '2026-10-05',
+    gymId: 'gym-main',
+    gymName: 'Gym',
+    romContext: 'Machine Track',
     isPR: true,
-    notes: 'Old gym PR. New gym has NO Smith machine, so free barbell squats are tracked (up to 60 kg total: 20kg bar + 20kg/side).'
+    notes: 'Squat PR.',
+    history: [
+      { id: 'h-5-1', date: '2026-08-25', weightKg: 80, reps: '8', notes: 'Deep track' }
+    ]
   },
   {
     id: 'pr-6',
@@ -198,12 +208,15 @@ export const HISTORICAL_PRS: PersonalRecord[] = [
     recordValue: '80 kg × 4',
     rawWeightKg: 80,
     reps: 4,
-    date: 'Historical',
-    gymId: 'gym-new',
-    gymName: 'New Gym',
+    date: '2026-10-10',
+    gymId: 'gym-main',
+    gymName: 'Gym',
     romContext: 'Slight support on final reps',
     isPR: true,
-    notes: 'Machine chest press with heavy load.'
+    notes: 'Machine chest press with heavy load.',
+    history: [
+      { id: 'h-6-1', date: '2026-09-05', weightKg: 70, reps: '6', notes: 'Controlled tempo' }
+    ]
   },
   {
     id: 'pr-7',
@@ -212,26 +225,33 @@ export const HISTORICAL_PRS: PersonalRecord[] = [
     recordValue: '75 kg × 3',
     rawWeightKg: 75,
     reps: 3,
-    date: 'Historical',
-    gymId: 'gym-new',
-    gymName: 'New Gym',
+    date: '2026-10-22',
+    gymId: 'gym-main',
+    gymName: 'Gym',
     romContext: 'Full stretch lat pulldown',
     isPR: true,
-    notes: 'User pulled 75 kg × 3.'
+    notes: 'User pulled 75 kg × 3.',
+    history: [
+      { id: 'h-7-1', date: '2026-08-18', weightKg: 65, reps: '8', notes: 'Form perfection' },
+      { id: 'h-7-2', date: '2026-09-30', weightKg: 70, reps: '5', notes: 'Full stretch' }
+    ]
   },
   {
     id: 'pr-8',
     exerciseName: 'Bodyweight Pull-ups',
-    muscle: 'Back / Lats / Biceps',
+    muscle: 'Back / Biceps',
     recordValue: '2 clean bodyweight reps',
     rawWeightKg: 84,
     reps: 2,
-    date: 'Historical',
-    gymId: 'gym-new',
-    gymName: 'New Gym',
+    date: '2026-10-25',
+    gymId: 'gym-main',
+    gymName: 'Gym',
     romContext: 'Strict bodyweight pull-up',
     isPR: true,
-    notes: 'Progression from assisted pull-up (80 lb assistance × 7 wide, × 10 close) to 2 full bodyweight pull-ups at ~82-84 kg bodyweight.'
+    notes: 'Progression to 2 full bodyweight pull-ups at ~84 kg bodyweight.',
+    history: [
+      { id: 'h-8-1', date: '2026-09-10', weightKg: 84, reps: '1', notes: 'First clean pull-up' }
+    ]
   },
   {
     id: 'pr-9',
@@ -240,12 +260,16 @@ export const HISTORICAL_PRS: PersonalRecord[] = [
     recordValue: '22.5 kg each × 5–6',
     rawWeightKg: 22.5,
     reps: '5-6',
-    date: 'Historical',
-    gymId: 'gym-new',
-    gymName: 'New Gym',
+    date: '2026-10-28',
+    gymId: 'gym-main',
+    gymName: 'Gym',
     romContext: 'Seated DB shoulder press',
     isPR: true,
-    notes: 'New gym has no shoulder press machine, so seated dumbbell press is primary compound overhead move.'
+    notes: 'Seated dumbbell press compound overhead move.',
+    history: [
+      { id: 'h-9-1', date: '2026-08-22', weightKg: 17.5, reps: '8', notes: 'Warmup progression' },
+      { id: 'h-9-2', date: '2026-09-24', weightKg: 20, reps: '7', notes: 'Solid lockouts' }
+    ]
   },
   {
     id: 'pr-10',
@@ -254,9 +278,9 @@ export const HISTORICAL_PRS: PersonalRecord[] = [
     recordValue: '75 kg × 10',
     rawWeightKg: 75,
     reps: 10,
-    date: 'Historical',
-    gymId: 'gym-new',
-    gymName: 'New Gym',
+    date: '2026-11-02',
+    gymId: 'gym-main',
+    gymName: 'Gym',
     romContext: 'Pin-loaded machine',
     isPR: true,
     notes: 'Progression: 65 kg × 15 -> 70 kg × 12 -> 75 kg × 10.'
@@ -276,10 +300,10 @@ export const HISTORICAL_EXERCISE_PROGRESSION = [
   {
     exercise: '45° Leg Press',
     history: [
-      { date: 'Old Gym (PR)', weightKg: 260.0, reps: 8, note: '260 kg × 7-8 PR (Half ROM context)' },
-      { date: 'New Gym (Set 1)', weightKg: 140.0, reps: 13, note: '140 kg × 13 @ 2-3 RIR' },
-      { date: 'New Gym (Set 2)', weightKg: 220.0, reps: 8, note: '220 kg × 8 @ 2 RIR' },
-      { date: 'New Gym (Set 3)', weightKg: 250.0, reps: 7, note: '250 kg × 7 @ 2 RIR' }
+      { date: 'Historical (PR)', weightKg: 260.0, reps: 8, note: '260 kg × 7-8 PR (Half ROM)' },
+      { date: 'Set 1', weightKg: 140.0, reps: 13, note: '140 kg × 13 @ 2-3 RIR' },
+      { date: 'Set 2', weightKg: 220.0, reps: 8, note: '220 kg × 8 @ 2 RIR' },
+      { date: 'Set 3', weightKg: 250.0, reps: 7, note: '250 kg × 7 @ 2 RIR' }
     ]
   },
   {
@@ -314,32 +338,6 @@ export const WORKOUT_SPLITS = [
       { day: 'Friday', muscle: 'Chest + Triceps', focus: 'Barbell Bench, Machine Press, Flyes, Triceps Pushdowns' },
       { day: 'Saturday', muscle: 'Legs + Shoulders', focus: 'Leg Press, Hamstrings, DB Shoulder Press, Lateral Raises' },
       { day: 'Sunday', muscle: 'Rest & Recovery', focus: 'Mobility, Hydration, Recovery' }
-    ]
-  },
-  {
-    id: 'two-a-day',
-    name: 'Historical Two-a-Day Split (Tested > 3 weeks)',
-    description: 'Historical trial plan with AM/PM sessions and 2 km hike.',
-    status: 'HISTORICAL_ARCHIVED',
-    schedule: [
-      { day: 'AM Session', muscle: 'Back + Chest + Legs', focus: 'Heavy compound session' },
-      { day: 'PM Session', muscle: 'Biceps + Triceps + Shoulders', focus: 'Arms & delts accessory' },
-      { day: 'Cardio', muscle: 'Cardio / Hike', focus: '2 km outdoor hike; ~6.5–7.5 hrs sleep' }
-    ]
-  },
-  {
-    id: 'bro-split',
-    name: 'Older Bro Split (Single Muscle / Day)',
-    description: 'Older routine: 1 muscle per day.',
-    status: 'HISTORICAL_ARCHIVED',
-    schedule: [
-      { day: 'Monday', muscle: 'Back', focus: 'Back isolation' },
-      { day: 'Tuesday', muscle: 'Shoulders', focus: 'Shoulders' },
-      { day: 'Wednesday', muscle: 'Chest', focus: 'Chest' },
-      { day: 'Thursday', muscle: 'Biceps', focus: 'Biceps' },
-      { day: 'Friday', muscle: 'Triceps', focus: 'Triceps' },
-      { day: 'Saturday', muscle: 'Legs', focus: 'Legs' },
-      { day: 'Sunday', muscle: 'Not Specified', focus: 'Rest' }
     ]
   }
 ];
@@ -464,162 +462,71 @@ export const HISTORICAL_NUTRITION_DAYS: DailyNutritionLog[] = [
 ];
 
 export const AFFORDABLE_PROTEIN_PILLARS = [
-  { food: 'Soybean (Raw)', costPer100g: '₹10–15', proteinPer100g: '36–38 g', affordability: 'Highest (Value champion)' },
-  { food: 'Eggs (Whole)', costPer100g: '₹20–25 (3 eggs)', proteinPer100g: '18–20 g', affordability: 'High' },
-  { food: 'Cow Milk', costPer100g: '₹6–8 / 100ml', proteinPer100g: '3.2 g', affordability: 'High' },
-  { food: 'Curd / Dahi', costPer100g: '₹7–10 / 100g', proteinPer100g: '3.5–4 g', affordability: 'High' },
-  { food: 'High-Protein Oats (Pinola)', costPer100g: '₹40 / 100g', proteinPer100g: '22 g', affordability: 'Medium-High' },
-  { food: 'Low-Fat Paneer', costPer100g: '₹35–45 / 100g', proteinPer100g: '18–20 g', affordability: 'Medium' },
-  { food: 'Peanut Butter', costPer100g: '₹30 / 100g', proteinPer100g: '25–28 g', affordability: 'High' },
-  { food: 'Chicken Breast / Curry Cut', costPer100g: '₹30–35 / 100g', proteinPer100g: '22–26 g', affordability: 'Medium' },
-  { food: 'Whey Protein (MB / ON)', costPer100g: '₹65–85 / scoop (25g P)', proteinPer100g: '75–80 g / 100g', affordability: 'Moderate (Capped at 1 scoop/day for budget)' }
+  { food: 'Soybean (Raw)', proteinPer100g: '36–38g Protein / 100g' },
+  { food: 'Eggs (Whole)', proteinPer100g: '18–20g Protein (3 eggs)' },
+  { food: 'Cow Milk', proteinPer100g: '10g Protein / 300ml' },
+  { food: 'Curd / Dahi', proteinPer100g: '7–8g Protein / 200g' },
+  { food: 'High-Protein Oats (Pinola)', proteinPer100g: '13g Protein / 60g' },
+  { food: 'Low-Fat Paneer', proteinPer100g: '18–20g Protein / 100g' },
+  { food: 'Peanut Butter', proteinPer100g: '25–28g Protein / 100g' },
+  { food: 'Chicken Breast', proteinPer100g: '24–26g Protein / 100g' }
 ];
 
 export const SUPPLEMENT_STACK: SupplementEntry[] = [
   {
     id: 'supp-1',
-    name: 'Wellcore Creatine Monohydrate (Fruit Fusion)',
-    brand: 'Wellcore (122g pack)',
-    dose: '3.0 g / day (Scoop ~3.7g)',
+    name: 'Wellcore Creatine Monohydrate',
+    brand: 'Wellcore',
+    dose: '3.0 g / day',
     frequency: 'Daily',
     time: 'With cold water / Post-workout',
     status: 'Daily Active',
-    notes: 'Asked about taking in cold water & creatine-related water retention weight.'
+    notes: 'Creatine monohydrate daily.'
   },
   {
     id: 'supp-2',
-    name: 'Biozyme Performance / Performance Whey',
-    brand: 'MuscleBlaze / Optimum Nutrition',
-    dose: '1 – 1.5 scoops (~25–37g protein)',
-    frequency: 'Daily / 1x daily due to budget constraints',
-    time: 'Morning or Post-workout in water/milk',
+    name: 'Biozyme Performance Whey',
+    brand: 'MuscleBlaze',
+    dose: '1 scoop (~25g protein)',
+    frequency: 'Daily',
+    time: 'Post-workout',
     status: 'Daily Active',
-    notes: 'Budget consideration: user explicitly noted whey is prioritized 1x daily to manage expenses.'
-  },
-  {
-    id: 'supp-3',
-    name: 'Blood Shower Pre-Workout',
-    brand: 'Nutrition Planet',
-    dose: '½ scoop',
-    frequency: 'Occasional / Historical',
-    time: 'Pre-workout',
-    status: 'Historical/Pre-workout',
-    notes: 'Reported tingling/burning sensations.'
-  },
-  {
-    id: 'supp-4',
-    name: 'Karnage Black Pre-Workout',
-    brand: 'BigMuscles',
-    dose: '1 full scoop',
-    frequency: 'Occasional / Historical',
-    time: 'Pre-workout',
-    status: 'Historical/Pre-workout',
-    notes: 'Experienced strong stimulation; mild chest discomfort was historically discussed after a pre-workout event. Logged as historical record without medical diagnosis.'
-  },
-  {
-    id: 'supp-5',
-    name: 'Neurobion Forte (Vitamin B12)',
-    brand: 'Doctor Advised',
-    dose: 'Per physician guidance',
-    frequency: 'Medical guidance',
-    time: 'Post meal',
-    status: 'Medical/Doctor Advised',
-    notes: 'Historically very low B12 lab result noted. Logged in health records; not treated as an automatic fitness recommendation.'
+    notes: 'Daily whey intake.'
   }
 ];
 
 export const HISTORICAL_RECOVERY_LOGS: RecoveryLog[] = [
   {
     id: 'rec-1',
-    date: '2026-10-03',
-    sleepHours: 6.8,
-    sleepQuality: 'Fair',
-    soreness: 7,
-    fatigue: 6,
-    energy: 7,
-    readiness: 6,
-    restDay: false,
-    sleepNotes: 'Sleep approx 6.5–7.5 hrs. Woke to urinate, back asleep after 5 mins.',
-    sorenessNotes: 'Glute cramps occurred after heavy deadlifting on 3 Oct 2026.'
-  },
-  {
-    id: 'rec-2',
-    date: '2026-10-26',
-    sleepHours: 7.2,
+    date: '2026-11-20',
+    sleepHours: 7.0,
     sleepQuality: 'Good',
-    soreness: 3,
-    fatigue: 3,
-    energy: 10,
-    readiness: 10,
-    restDay: false,
-    sleepNotes: 'Full 7+ hours rested.',
-    sorenessNotes: 'User reported feeling 100% in back + biceps session (T-bar, Lat pulldown, Cable row, Shrugs, Curls).'
-  },
-  {
-    id: 'rec-3',
-    date: '2026-11-12',
-    sleepHours: 6.0,
-    sleepQuality: 'Fair',
-    soreness: 6,
-    fatigue: 7,
+    soreness: 4,
+    fatigue: 4,
     energy: 8,
-    readiness: 7,
+    readiness: 8,
     restDay: false,
-    sleepNotes: 'Practical 6 hours sleep. 7 hours not always possible with work/schedule.',
-    sorenessNotes: 'Hard gym session + 20 minutes intense cardio performed.'
+    sleepNotes: '7 hours rested sleep.',
+    sorenessNotes: 'Normal muscle soreness.'
   }
 ];
 
-export const HISTORICAL_PROGRESS_PHOTOS: ProgressPhotoRecord[] = [
-  {
-    id: 'photo-1',
-    date: '2026-10-31',
-    bodyweight: 82.5,
-    view: 'Back',
-    pose: 'Flexed',
-    lighting: 'Gym downlighting',
-    focusMuscles: ['Lats', 'Traps', 'Rear Delts'],
-    notes: 'Assessment: Looking for wider V-taper and upper back thickness. Realistic natural physique, zero artificial muscle augmentation.',
-    photoPlaceholder: 'back_lat_spread'
-  },
-  {
-    id: 'photo-2',
-    date: '2026-11-07',
-    bodyweight: 83.0,
-    view: 'Front',
-    pose: 'Relaxed',
-    lighting: 'Natural room light',
-    focusMuscles: ['Shoulders', 'Chest', 'Abdominal fat / Side handles'],
-    notes: 'Checking waistline and side handles reduction while maintaining shoulder fullness.',
-    photoPlaceholder: 'front_relaxed'
-  },
-  {
-    id: 'photo-3',
-    date: '2026-11-12',
-    bodyweight: 84.0,
-    view: 'Side',
-    pose: 'Flexed',
-    lighting: 'Direct overhead light',
-    focusMuscles: ['Arms', 'Forearms', 'Chest thickness'],
-    notes: 'Weight at 84 kg. User assessing arm & forearm vascularity and chest thickness during cut.',
-    photoPlaceholder: 'side_chest'
-  }
-];
+export const HISTORICAL_PROGRESS_PHOTOS: ProgressPhotoRecord[] = [];
 
 export const INITIAL_MEASUREMENTS: MeasurementRecord[] = [
   {
     id: 'meas-baseline',
-    date: '2026-11-12',
-    waistCm: null, // NOT AVAILABLE
-    chestCm: null, // NOT AVAILABLE
-    shouldersCm: null, // NOT AVAILABLE
-    bicepsLeftCm: null, // NOT AVAILABLE
-    bicepsRightCm: null, // NOT AVAILABLE
-    forearmsCm: null, // NOT AVAILABLE
-    thighsCm: null, // NOT AVAILABLE
-    calvesCm: null, // NOT AVAILABLE
-    bodyFatPct: null, // NOT AVAILABLE
-    muscleMassKg: null, // NOT AVAILABLE
-    notes: 'Historical body circumferences and body-fat % are currently Not Available. Stored as null (never zero) awaiting user measurements.'
+    date: '2026-11-20',
+    waistCm: null,
+    chestCm: null,
+    shouldersCm: null,
+    bicepsLeftCm: null,
+    bicepsRightCm: null,
+    forearmsCm: null,
+    thighsCm: null,
+    calvesCm: null,
+    bodyFatPct: null,
+    muscleMassKg: null,
+    notes: 'Baseline'
   }
 ];
