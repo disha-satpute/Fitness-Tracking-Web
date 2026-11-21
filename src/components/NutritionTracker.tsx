@@ -8,7 +8,12 @@ import {
   Calendar, 
   Sparkles,
   Camera,
-  Trash2
+  Trash2,
+  Coffee,
+  Sun,
+  Moon,
+  Cookie,
+  Plus
 } from 'lucide-react';
 import { FoodItem } from '../types/fitness';
 import { parseQuickIndianMeal } from '../utils/aiAdvisor';
@@ -20,6 +25,7 @@ export const NutritionTracker: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'daily' | 'ai-scanner'>('daily');
 
   // Manual food form state
+  const [selectedSlot, setSelectedSlot] = useState<'Breakfast' | 'Lunch' | 'Dinner' | 'Snacks'>('Breakfast');
   const [foodName, setFoodName] = useState('');
   const [foodCalories, setFoodCalories] = useState('');
   const [foodProtein, setFoodProtein] = useState('');
@@ -121,7 +127,7 @@ export const NutritionTracker: React.FC = () => {
       rawOrCooked: 'cooked'
     };
 
-    addFoodLog(selectedDate, 'Dinner', newItem);
+    addFoodLog(selectedDate, selectedSlot, newItem);
     setFoodName('');
     setFoodCalories('');
     setFoodProtein('');
@@ -283,14 +289,79 @@ export const NutritionTracker: React.FC = () => {
             )}
           </div>
 
+          {/* Standard 4 Meal Slot Selector Cards (Breakfast, Lunch, Dinner, Snacks) */}
+          <div className="space-y-2">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+              Select Meal Category
+            </span>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              {[
+                { key: 'Breakfast' as const, label: 'Breakfast', icon: Coffee, desc: 'Morning fuel' },
+                { key: 'Lunch' as const, label: 'Lunch', icon: Sun, desc: 'Midday meal' },
+                { key: 'Dinner' as const, label: 'Dinner', icon: Moon, desc: 'Evening meal' },
+                { key: 'Snacks' as const, label: 'Snacks', icon: Cookie, desc: 'Pre/Post workout' }
+              ].map((slot) => {
+                const IconComponent = slot.icon;
+                const isSelected = selectedSlot === slot.key;
+                const mealData = currentDay.meals.find(m => m.mealName === slot.key);
+                const mealCals = mealData ? Math.round(mealData.items.reduce((s, i) => s + (i.calories || 0), 0)) : 0;
+                const mealProtein = mealData ? Math.round(mealData.items.reduce((s, i) => s + (i.protein || 0), 0)) : 0;
+
+                return (
+                  <button
+                    key={slot.key}
+                    type="button"
+                    onClick={() => setSelectedSlot(slot.key)}
+                    className={`p-3 rounded-2xl border text-left transition relative flex flex-col justify-between ${
+                      isSelected
+                        ? 'bg-gradient-to-b from-indigo-950/80 to-slate-900 border-indigo-500 shadow-lg shadow-indigo-500/10 ring-1 ring-indigo-500'
+                        : 'bg-slate-900/90 border-slate-800 hover:border-slate-700 text-slate-400'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className={`p-1.5 rounded-xl ${isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-950 text-slate-400'}`}>
+                        <IconComponent className="w-4 h-4" />
+                      </div>
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                        isSelected ? 'bg-indigo-500/20 text-indigo-300' : 'text-slate-500'
+                      }`}>
+                        {mealData && mealData.items.length > 0 ? `${mealData.items.length} items` : 'Empty'}
+                      </span>
+                    </div>
+
+                    <div>
+                      <div className={`text-xs font-bold ${isSelected ? 'text-white' : 'text-slate-300'}`}>
+                        {slot.label}
+                      </div>
+                      <div className="text-[10px] text-slate-400 mt-0.5 font-mono">
+                        {mealProtein > 0 ? (
+                          <span className="text-emerald-400 font-bold">{mealProtein}g P • {mealCals} kcal</span>
+                        ) : (
+                          <span>{slot.desc}</span>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Quick Add Food Simple Form for this selected date */}
           <form onSubmit={handleAddManualFood} className="bg-slate-900 border border-slate-800 p-3.5 rounded-2xl flex flex-wrap gap-2 items-center">
+            <div className="w-full flex items-center justify-between text-xs pb-1 mb-1 border-b border-slate-800/80">
+              <span className="text-slate-400 text-[11px] flex items-center gap-1.5">
+                Adding to <strong className="text-indigo-400">{selectedSlot}</strong>:
+              </span>
+              <span className="text-[10px] text-slate-500">Manual quick log</span>
+            </div>
+
             <input
               type="text"
-              placeholder="Food name (e.g. Boiled eggs / Oats)"
+              placeholder={`Food item for ${selectedSlot} (e.g. 2 Boiled Eggs)`}
               value={foodName}
               onChange={(e) => setFoodName(e.target.value)}
-              className="flex-1 min-w-[140px] bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-white"
+              className="flex-1 min-w-[140px] bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500"
               required
             />
             <input
@@ -298,7 +369,7 @@ export const NutritionTracker: React.FC = () => {
               placeholder="Cals"
               value={foodCalories}
               onChange={(e) => setFoodCalories(e.target.value)}
-              className="w-16 bg-slate-950 border border-slate-800 rounded-xl px-2 py-1.5 text-xs text-white font-mono"
+              className="w-16 bg-slate-950 border border-slate-800 rounded-xl px-2 py-2 text-xs text-white font-mono placeholder:text-slate-500 focus:outline-none focus:border-indigo-500"
               required
             />
             <input
@@ -306,14 +377,14 @@ export const NutritionTracker: React.FC = () => {
               placeholder="Protein (g)"
               value={foodProtein}
               onChange={(e) => setFoodProtein(e.target.value)}
-              className="w-20 bg-slate-950 border border-slate-800 rounded-xl px-2 py-1.5 text-xs text-white font-mono"
+              className="w-20 bg-slate-950 border border-slate-800 rounded-xl px-2 py-2 text-xs text-white font-mono placeholder:text-slate-500 focus:outline-none focus:border-indigo-500"
               required
             />
             <button
               type="submit"
-              className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs"
+              className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1 transition shadow-lg shadow-amber-500/20 active:scale-95"
             >
-              Add to Day
+              <Plus className="w-3.5 h-3.5" /> Add to {selectedSlot}
             </button>
           </form>
         </div>
