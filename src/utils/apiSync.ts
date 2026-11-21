@@ -1,5 +1,5 @@
 import { neon } from '@neondatabase/serverless';
-import { PersonalRecord, DailyStepRecord, WorkoutSession, DailyNutritionLog } from '../types/fitness';
+import { PersonalRecord, DailyStepRecord, WorkoutSession, DailyNutritionLog, WeightRecord } from '../types/fitness';
 
 // Use pooler endpoint for resilient HTTP connections across all network environments
 const connectionString = 
@@ -225,6 +225,46 @@ export const apiSync = {
       return true;
     } catch (err) {
       console.error('Failed to save workout to Neon:', err);
+      return false;
+    }
+  },
+
+  // Weight Records
+  async getWeightRecords(): Promise<WeightRecord[] | null> {
+    if (!sql) return null;
+    try {
+      const rows = await sql`SELECT * FROM weight_records ORDER BY date ASC;`;
+      if (rows.length === 0) return null;
+      return rows.map((r: any) => ({
+        id: r.id,
+        date: r.date,
+        weight: parseFloat(r.weight),
+        periodLabel: r.period_label || r.date,
+        status: (r.status as any) || 'CONFIRMED',
+        notes: r.notes || ''
+      }));
+    } catch (err) {
+      console.error('Failed to get weight records from Neon:', err);
+      return null;
+    }
+  },
+
+  async saveWeightRecord(record: WeightRecord): Promise<boolean> {
+    if (!sql) return false;
+    try {
+      await sql`
+        INSERT INTO weight_records (id, date, weight, period_label, notes, updated_at)
+        VALUES (${record.id}, ${record.date}, ${record.weight}, ${record.periodLabel || record.date}, ${record.notes || ''}, CURRENT_TIMESTAMP)
+        ON CONFLICT (id) DO UPDATE SET
+          weight = EXCLUDED.weight,
+          period_label = EXCLUDED.period_label,
+          notes = EXCLUDED.notes,
+          updated_at = CURRENT_TIMESTAMP;
+      `;
+      console.log(`✅ [Neon Live] Weight recorded: ${record.weight} kg on ${record.date}`);
+      return true;
+    } catch (err) {
+      console.error('Failed to save weight record to Neon:', err);
       return false;
     }
   }

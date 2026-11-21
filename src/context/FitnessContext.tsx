@@ -360,6 +360,17 @@ export const FitnessProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setNutritionLogs(remoteNutrition);
       }
     });
+
+    // 4. Fetch remote Weight records
+    apiSync.getWeightRecords().then((remoteWeights) => {
+      if (remoteWeights && remoteWeights.length > 0) {
+        setWeightRecords(remoteWeights);
+        const latest = remoteWeights[remoteWeights.length - 1];
+        if (latest && latest.weight) {
+          setProfile((p) => ({ ...p, currentWeight: latest.weight }));
+        }
+      }
+    });
   }, []);
 
   const updateDailySteps = (date: string, steps: number) => {
@@ -444,6 +455,7 @@ export const FitnessProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
     setWeightRecords((prev) => [...prev, newRecord]);
     setProfile((prev) => ({ ...prev, currentWeight: record.weight }));
+    apiSync.saveWeightRecord(newRecord);
   };
 
   const addPr = (record: Omit<PersonalRecord, 'id'>) => {
