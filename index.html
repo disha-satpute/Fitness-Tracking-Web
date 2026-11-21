@@ -13,7 +13,20 @@
     <meta name="theme-color" content="#030712" />
     <meta name="format-detection" content="telephone=no" />
     <title>Aadesh Fitness & Progress Tracking</title>
-  </head>
+    
+    <!-- PWA Manifest & App Icons -->
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/pwa-192.svg" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/pwa-192.svg" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/pwa-512.svg" />
+    
+    <!-- iOS Safari Native Standalone Meta -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="IronPulse" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#030712" />
+    <meta name="msapplication-TileColor" content="#030712" />
   <body class="bg-slate-950 text-slate-100 antialiased selection:bg-amber-500 selection:text-slate-950">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>

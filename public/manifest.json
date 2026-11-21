@@ -1,0 +1,37 @@
+{
+  "name": "IronPulse Fitness Tracker",
+  "short_name": "IronPulse",
+  "description": "Personalized strength, workout, nutrition & progressive overload tracker",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#030712",
+  "theme_color": "#030712",
+  "icons": [
+    {
+      "src": "/pwa-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["fitness", "health", "sports"],
+  "shortcuts": [
+    {
+      "name": "Workouts",
+      "url": "/#workouts",
+      "description": "Log today's workout"
+    },
+    {
+      "name": "Diet & Macros",
+      "url": "/#nutrition",
+      "description": "Track nutrition and protein"
+    }
+  ]
+}

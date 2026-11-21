@@ -10,7 +10,8 @@ import {
   Flame, 
   TrendingUp, 
   Sun, 
-  Moon 
+  Moon,
+  Download
 } from 'lucide-react';
 
 const NAME_OPTIONS = ['Aaduu', 'Aadesh', 'Handsome', 'Aadyy'];
@@ -19,6 +20,30 @@ const MainApp: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [progressSubTab, setProgressSubTab] = useState<'weight' | 'prs'>('weight');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
+
+  // PWA Install prompt listener for Android / Chrome
+  useEffect(() => {
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallBanner(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setShowInstallBanner(false);
+    }
+    setDeferredPrompt(null);
+  };
 
   // Random / anonymous name rotation without select dropdown
   const [selectedName, setSelectedName] = useState<string>(() => {
@@ -125,6 +150,15 @@ const MainApp: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          {showInstallBanner && (
+            <button
+              onClick={handleInstallClick}
+              className="flex items-center gap-1 px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg text-xs shadow-md shadow-amber-500/20 active:scale-95 transition"
+            >
+              <Download className="w-3.5 h-3.5" /> Install
+            </button>
+          )}
+
           <button
             onClick={toggleTheme}
             className={`p-1.5 rounded-xl transition ${

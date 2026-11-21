@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#4f46e5" />
+    </linearGradient>
+  </defs>
+
+  <!-- Dark Rounded App Background -->
+  <rect width="512" height="512" rx="115" fill="url(#bgGrad)" stroke="#1e293b" stroke-width="12" />
+
+  <!-- Subtle Glow Ring -->
+  <circle cx="256" cy="256" r="185" fill="none" stroke="url(#glowGrad)" stroke-width="6" opacity="0.4" stroke-dasharray="16 12" />
+
+  <!-- Heavy Dumbbell / Strength Icon -->
+  <g transform="translate(256, 256) rotate(-45) translate(-256, -256)">
+    <!-- Main Center Bar -->
+    <rect x="156" y="240" width="200" height="32" rx="12" fill="#94a3b8" />
+    <rect x="220" y="236" width="72" height="40" rx="8" fill="#cbd5e1" />
+
+    <!-- Left Outer Plate -->
+    <rect x="96" y="156" width="36" height="200" rx="16" fill="url(#goldGrad)" />
+    <!-- Left Inner Plate -->
+    <rect x="138" y="186" width="28" height="140" rx="12" fill="#f59e0b" />
+    <!-- Left Collar -->
+    <rect x="170" y="226" width="16" height="60" rx="6" fill="#64748b" />
+
+    <!-- Right Outer Plate -->
+    <rect x="380" y="156" width="36" height="200" rx="16" fill="url(#goldGrad)" />
+    <!-- Right Inner Plate -->
+    <rect x="346" y="186" width="28" height="140" rx="12" fill="#f59e0b" />
+    <!-- Right Collar -->
+    <rect x="326" y="226" width="16" height="60" rx="6" fill="#64748b" />
+  </g>
+
+  <!-- Energy Pulse Dot -->
+  <circle cx="390" cy="120" r="18" fill="#10b981" />
+  <circle cx="390" cy="120" r="28" fill="none" stroke="#10b981" stroke-width="4" opacity="0.6" />
+</svg>
