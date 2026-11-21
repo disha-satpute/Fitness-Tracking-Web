@@ -28,6 +28,7 @@ export const NutritionTracker: React.FC = () => {
   const [aiMealPrompt, setAiMealPrompt] = useState('');
   const [aiDetectedMeal, setAiDetectedMeal] = useState<any>(null);
   const [isAiScanning, setIsAiScanning] = useState(false);
+  const [targetMealSlot, setTargetMealSlot] = useState<'Breakfast' | 'Lunch' | 'Dinner' | 'Post-Workout' | 'Snacks'>('Lunch');
 
   // Day-wise Navigation
   const handleShiftDay = (delta: number) => {
@@ -153,7 +154,7 @@ export const NutritionTracker: React.FC = () => {
       rawOrCooked: 'cooked'
     };
 
-    addFoodLog(selectedDate, 'Dinner', newItem);
+    addFoodLog(selectedDate, targetMealSlot, newItem);
     setAiDetectedMeal(null);
     setAiMealPrompt('');
     setActiveTab('daily');
@@ -320,43 +321,110 @@ export const NutritionTracker: React.FC = () => {
 
       {/* AI Food Scan & Macro Parser Tab */}
       {activeTab === 'ai-scanner' && (
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
-          <div className="flex items-center gap-1.5">
-            <Camera className="w-4 h-4 text-indigo-400" />
-            <span className="font-bold text-white text-sm">Natural Language Indian Meal Scanner</span>
+        <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-amber-400" />
+              <span className="font-bold text-white text-sm">Smart Indian Meal & Macro Scanner</span>
+            </div>
+            <span className="text-[10px] text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-800/40">
+              Auto-Quantity AI
+            </span>
+          </div>
+
+          {/* Quick-Prompt Preset Chips */}
+          <div className="space-y-1.5">
+            <span className="text-[11px] text-slate-400">Quick Examples (Tap to test):</span>
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                '3 rotis + 1 bowl dal + 100g paneer',
+                '150g chicken breast + 1 bowl rice + salad',
+                '3 boiled eggs + 250ml milk',
+                '50g soya chunks + 2 rotis + curd',
+                '1 scoop whey + 50g oats'
+              ].map((sample, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => {
+                    setAiMealPrompt(sample);
+                    handleScanAiMeal(sample);
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-[11px] text-slate-300 transition"
+                >
+                  {sample}
+                </button>
+              ))}
+            </div>
           </div>
 
           <textarea
-            rows={2}
-            placeholder="Type what you ate: e.g. '2 rotis + palak paneer + 1 bowl curd'"
+            rows={3}
+            placeholder="Type what you ate with quantities: e.g. '2 rotis + 150g chicken breast + 1 bowl curd' or '3 boiled eggs + milk'"
             value={aiMealPrompt}
             onChange={(e) => setAiMealPrompt(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white"
+            className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 font-sans leading-relaxed"
           />
 
-          <div className="flex gap-2">
-            <button
-              onClick={() => handleScanAiMeal()}
-              disabled={isAiScanning || !aiMealPrompt}
-              className="flex-1 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 font-bold text-white text-xs transition disabled:opacity-50"
-            >
-              {isAiScanning ? 'Calculating...' : 'Calculate Macros ✨'}
-            </button>
+          {/* Meal Slot Selection */}
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-slate-400 text-[11px]">Log into:</span>
+            {(['Breakfast', 'Lunch', 'Post-Workout', 'Dinner', 'Snacks'] as const).map((slot) => (
+              <button
+                key={slot}
+                type="button"
+                onClick={() => setTargetMealSlot(slot)}
+                className={`px-2 py-1 rounded-lg text-[11px] font-medium transition ${
+                  targetMealSlot === slot
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+                }`}
+              >
+                {slot}
+              </button>
+            ))}
           </div>
 
+          <button
+            onClick={() => handleScanAiMeal()}
+            disabled={isAiScanning || !aiMealPrompt}
+            className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 font-bold text-slate-950 text-xs transition disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-slate-950" />
+            {isAiScanning ? 'Analyzing Macros...' : 'Calculate Exact Macros ✨'}
+          </button>
+
           {aiDetectedMeal && (
-            <div className="p-3 rounded-xl bg-slate-950 border border-emerald-500/40 text-xs space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-white">{aiDetectedMeal.name}</span>
-                <span className="font-mono text-emerald-400 font-bold">
-                  {aiDetectedMeal.calories} kcal • {aiDetectedMeal.protein}g Protein
+            <div className="p-4 rounded-xl bg-slate-950 border border-emerald-500/40 text-xs space-y-3">
+              <div className="flex items-start justify-between">
+                <div>
+                  <span className="font-bold text-white text-sm block">{aiDetectedMeal.name}</span>
+                  <div className="text-[11px] text-emerald-400 font-mono font-bold mt-1">
+                    {aiDetectedMeal.calories} kcal • {aiDetectedMeal.protein}g Protein • {aiDetectedMeal.carbs}g Carbs • {aiDetectedMeal.fat}g Fat
+                  </div>
+                </div>
+                <span className="px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 font-bold text-[10px] border border-indigo-800/40">
+                  {targetMealSlot}
                 </span>
               </div>
+
+              {/* Recognized Items breakdown */}
+              <div className="space-y-1 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Detected Breakdown:</span>
+                <div className="flex flex-wrap gap-1.5 mt-1">
+                  {aiDetectedMeal.recognizedItems?.map((item: string, idx: number) => (
+                    <span key={idx} className="px-2 py-0.5 bg-slate-800 text-slate-300 rounded text-[11px] font-mono">
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
               <button
                 onClick={handleApplyAiMealToLog}
-                className="w-full py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg"
+                className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition shadow-lg shadow-emerald-600/20"
               >
-                Save to {selectedDate} Log
+                Save to {selectedDate} ({targetMealSlot})
               </button>
             </div>
           )}

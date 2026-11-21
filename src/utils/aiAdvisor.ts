@@ -30,7 +30,6 @@ export const getSmartOverloadPrediction = (
     };
   }
 
-  // Exercise specific historical progression logic
   if (exerciseName.toLowerCase().includes('incline dumbbell')) {
     return {
       exerciseName,
@@ -79,7 +78,7 @@ export const getSmartOverloadPrediction = (
       targetReps: '6–7 reps',
       targetRir: 2,
       fatigueInsight: 'Keep lumbar spine braced; Olympic barbell depth prioritized.',
-      reasoning: 'Last session logged 60 kg total (20kg bar + 20kg/side) × 7 reps. Safe overload is +2.5kg per side.'
+      reasoning: 'Last session logged 60 kg total × 7 reps. Safe overload is +2.5kg per side.'
     };
   }
 
@@ -96,7 +95,6 @@ export const getSmartOverloadPrediction = (
     };
   }
 
-  // Generic progressive overload recommendation
   return {
     exerciseName,
     recommendedAction: 'PROGRESS_REPS',
@@ -125,14 +123,14 @@ export const getSmartBudgetMealSuggestions = (
   return [
     {
       id: 'opt-1',
-      title: 'Raw Soybean Curry + Cow Milk',
+      title: 'Raw Soybean Curry + Whole Cow Milk',
       proteinYield: 26,
       calories: 370,
       items: [
         '50g Raw Soybean (boiled & cooked into curry) → ~18g Protein',
         '250ml Whole Cow Milk → ~8g Protein'
       ],
-      explanation: 'Delivers 26g complete protein easily from simple kitchen staples.'
+      explanation: 'High bio-available plant protein + milk casein without needing costly whey powder.'
     },
     {
       id: 'opt-2',
@@ -154,12 +152,21 @@ export const getSmartBudgetMealSuggestions = (
         '60g High-Protein Oats (Pinola) → ~13g Protein',
         '200g Fresh Dahi / Curd → ~8-9g Protein'
       ],
-      explanation: 'Easily digestible post-workout carbohydrate + casein/whey combo.'
+      explanation: 'Easily digestible carbohydrate + casein combo for sustained muscle replenishment.'
     }
   ];
 };
 
-export const parseQuickIndianMeal = (text: string) => {
+export interface ParsedMealResult {
+  name: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  recognizedItems: string[];
+}
+
+export const parseQuickIndianMeal = (text: string): ParsedMealResult => {
   const lower = text.toLowerCase();
   let estCals = 0;
   let estProtein = 0;
@@ -167,88 +174,195 @@ export const parseQuickIndianMeal = (text: string) => {
   let estFat = 0;
   const recognizedItems: string[] = [];
 
-  if (lower.includes('roti') || lower.includes('chapati')) {
-    const match = lower.match(/(\d+)\s*(?:roti|chapati)/);
-    const count = match ? parseInt(match[1]) : 2;
+  // Helper number extractor
+  const getQty = (regex: RegExp, defaultVal: number = 1): number => {
+    const m = lower.match(regex);
+    if (!m) return defaultVal;
+    return parseFloat(m[1]) || defaultVal;
+  };
+
+  // 1. Roti / Chapati / Phulka / Paratha
+  if (lower.includes('roti') || lower.includes('chapati') || lower.includes('phulka')) {
+    const count = getQty(/(\d+(?:\.\d+)?)\s*(?:roti|chapati|phulka)/, 2);
     estCals += count * 85;
-    estProtein += count * 2.8;
+    estProtein += count * 3;
     estCarbs += count * 16;
-    estFat += count * 1;
-    recognizedItems.push(`${count} Chapatis (~${(count * 2.8).toFixed(1)}g P)`);
+    estFat += count * 0.5;
+    recognizedItems.push(`${count} Roti (~${(count * 3).toFixed(1)}g P)`);
+  } else if (lower.includes('paratha')) {
+    const count = getQty(/(\d+(?:\.\d+)?)\s*paratha/, 1);
+    estCals += count * 220;
+    estProtein += count * 5;
+    estCarbs += count * 28;
+    estFat += count * 10;
+    recognizedItems.push(`${count} Paratha (~${count * 5}g P)`);
   }
 
+  // 2. Eggs (boiled / omelette / bhurji / egg white)
+  if (lower.includes('egg') || lower.includes('omelet') || lower.includes('bhurji') || lower.includes('anda')) {
+    const isEggWhite = lower.includes('white');
+    const count = getQty(/(\d+(?:\.\d+)?)\s*(?:egg|anda|boiled)/, 2);
+    if (isEggWhite) {
+      estCals += count * 18;
+      estProtein += count * 3.8;
+      estFat += 0;
+      estCarbs += count * 0.3;
+      recognizedItems.push(`${count} Egg Whites (~${(count * 3.8).toFixed(1)}g P)`);
+    } else {
+      estCals += count * 75;
+      estProtein += count * 6.2;
+      estFat += count * 5;
+      estCarbs += count * 0.6;
+      recognizedItems.push(`${count} Whole Eggs (~${(count * 6.2).toFixed(1)}g P)`);
+    }
+  }
+
+  // 3. Chicken (chicken breast, curry, tandoori, grilled)
+  if (lower.includes('chicken') || lower.includes('murgh')) {
+    const grams = getQty(/(\d+(?:\.\d+)?)\s*g(?:m|ram)?\s*chicken/, 150);
+    const proteinRatio = lower.includes('breast') || lower.includes('grilled') ? 0.31 : 0.22;
+    const p = Math.round(grams * proteinRatio);
+    const cals = Math.round(grams * (proteinRatio === 0.31 ? 1.65 : 2.1));
+    estCals += cals;
+    estProtein += p;
+    estCarbs += 2;
+    estFat += Math.round(grams * 0.05);
+    recognizedItems.push(`${grams}g Chicken (~${p}g P)`);
+  }
+
+  // 4. Paneer (Cottage cheese)
   if (lower.includes('paneer')) {
-    estCals += 240;
-    estProtein += 16;
-    estCarbs += 4;
-    estFat += 18;
-    recognizedItems.push('Paneer preparation (~16g P)');
+    const grams = getQty(/(\d+(?:\.\d+)?)\s*g(?:m|ram)?\s*paneer/, 100);
+    const p = Math.round(grams * 0.18);
+    const f = Math.round(grams * 0.20);
+    const c = Math.round(grams * 0.04);
+    const cals = Math.round(grams * 2.65);
+    estCals += cals;
+    estProtein += p;
+    estCarbs += c;
+    estFat += f;
+    recognizedItems.push(`${grams}g Paneer (~${p}g P)`);
   }
 
-  if (lower.includes('soybean') || lower.includes('soya')) {
-    estCals += 215;
-    estProtein += 18;
-    estCarbs += 14;
-    estFat += 9.5;
-    recognizedItems.push('Soybean Sabji (~18g P)');
+  // 5. Soya / Soybean
+  if (lower.includes('soya') || lower.includes('soybean')) {
+    const grams = getQty(/(\d+(?:\.\d+)?)\s*g(?:m|ram)?\s*(?:soya|soybean)/, 50);
+    const isChunks = lower.includes('chunk') || lower.includes('wadi');
+    const p = Math.round(grams * (isChunks ? 0.52 : 0.36));
+    const cals = Math.round(grams * (isChunks ? 3.4 : 4.4));
+    estCals += cals;
+    estProtein += p;
+    estCarbs += Math.round(grams * 0.3);
+    estFat += Math.round(grams * 0.05);
+    recognizedItems.push(`${grams}g Soya (~${p}g P)`);
   }
 
-  if (lower.includes('curd') || lower.includes('dahi')) {
-    estCals += 120;
-    estProtein += 7;
-    estCarbs += 8;
-    estFat += 6;
-    recognizedItems.push('Curd / Dahi (~7g P)');
+  // 6. Whey Protein
+  if (lower.includes('whey') || lower.includes('protein powder')) {
+    const scoops = getQty(/(\d+(?:\.\d+)?)\s*scoop/, 1);
+    estCals += Math.round(scoops * 125);
+    estProtein += Math.round(scoops * 25);
+    estCarbs += Math.round(scoops * 2.5);
+    estFat += Math.round(scoops * 1.5);
+    recognizedItems.push(`${scoops} scoop Whey (~${Math.round(scoops * 25)}g P)`);
   }
 
-  if (lower.includes('rice')) {
-    estCals += 180;
-    estProtein += 3.5;
-    estCarbs += 38;
-    estFat += 0.5;
-    recognizedItems.push('Cooked Rice (~3.5g P)');
+  // 7. Rice (cooked rice / jeera rice / biryani)
+  if (lower.includes('rice') || lower.includes('chawal')) {
+    const bowls = getQty(/(\d+(?:\.\d+)?)\s*(?:bowl|katori|plate)/, 1);
+    estCals += Math.round(bowls * 180);
+    estProtein += Math.round(bowls * 3.5);
+    estCarbs += Math.round(bowls * 40);
+    estFat += Math.round(bowls * 0.5);
+    recognizedItems.push(`${bowls} bowl Rice (~${(bowls * 3.5).toFixed(1)}g P)`);
   }
 
-  if (lower.includes('egg') || lower.includes('omelette')) {
-    const match = lower.match(/(\d+)\s*(?:egg|boiled egg|eggs)/);
-    const count = match ? parseInt(match[1]) : 2;
-    estCals += count * 72;
-    estProtein += count * 6;
-    estFat += count * 5;
-    recognizedItems.push(`${count} Eggs (~${count * 6}g P)`);
+  // 8. Dal / Lentils / Sambar / Chole / Rajma
+  if (lower.includes('dal') || lower.includes('daal') || lower.includes('sambar')) {
+    const bowls = getQty(/(\d+(?:\.\d+)?)\s*(?:bowl|katori)/, 1);
+    estCals += Math.round(bowls * 150);
+    estProtein += Math.round(bowls * 8);
+    estCarbs += Math.round(bowls * 22);
+    estFat += Math.round(bowls * 3);
+    recognizedItems.push(`${bowls} bowl Dal (~${bowls * 8}g P)`);
+  } else if (lower.includes('chole') || lower.includes('chana') || lower.includes('rajma')) {
+    const bowls = getQty(/(\d+(?:\.\d+)?)\s*(?:bowl|katori|plate)/, 1);
+    estCals += Math.round(bowls * 240);
+    estProtein += Math.round(bowls * 12);
+    estCarbs += Math.round(bowls * 36);
+    estFat += Math.round(bowls * 5);
+    recognizedItems.push(`${bowls} bowl Chole/Rajma (~${bowls * 12}g P)`);
   }
 
-  if (lower.includes('dal') || lower.includes('daal')) {
-    estCals += 150;
-    estProtein += 8;
-    estCarbs += 22;
-    estFat += 3;
-    recognizedItems.push('1 Bowl Dal (~8g P)');
+  // 9. Curd / Dahi / Greek Yogurt
+  if (lower.includes('curd') || lower.includes('dahi') || lower.includes('yogurt')) {
+    const grams = getQty(/(\d+(?:\.\d+)?)\s*g(?:m|ram)?/, 150);
+    const p = Math.round(grams * 0.04);
+    const cals = Math.round(grams * 0.65);
+    estCals += cals;
+    estProtein += p;
+    estCarbs += Math.round(grams * 0.045);
+    estFat += Math.round(grams * 0.035);
+    recognizedItems.push(`${grams}g Curd (~${p}g P)`);
   }
 
-  if (lower.includes('milk')) {
-    estCals += 160;
-    estProtein += 8.5;
-    estCarbs += 12;
-    estFat += 8.5;
-    recognizedItems.push('Cow Milk (~8.5g P)');
+  // 10. Milk / Doodh
+  if (lower.includes('milk') || lower.includes('doodh')) {
+    const ml = getQty(/(\d+(?:\.\d+)?)\s*ml/, 250);
+    const p = Math.round(ml * 0.033);
+    const cals = Math.round(ml * 0.65);
+    estCals += cals;
+    estProtein += p;
+    estCarbs += Math.round(ml * 0.05);
+    estFat += Math.round(ml * 0.035);
+    recognizedItems.push(`${ml}ml Milk (~${p}g P)`);
   }
 
+  // 11. Oats / Oatmeal
+  if (lower.includes('oats') || lower.includes('oatmeal')) {
+    const grams = getQty(/(\d+(?:\.\d+)?)\s*g(?:m|ram)?/, 50);
+    const p = Math.round(grams * 0.13);
+    const cals = Math.round(grams * 3.8);
+    estCals += cals;
+    estProtein += p;
+    estCarbs += Math.round(grams * 0.65);
+    estFat += Math.round(grams * 0.07);
+    recognizedItems.push(`${grams}g Oats (~${p}g P)`);
+  }
+
+  // 12. Peanut Butter / Nuts (Almonds / Kaju)
+  if (lower.includes('peanut butter')) {
+    const tbsp = getQty(/(\d+(?:\.\d+)?)\s*(?:tbsp|spoon)/, 1);
+    estCals += tbsp * 95;
+    estProtein += tbsp * 4;
+    estCarbs += tbsp * 3;
+    estFat += tbsp * 8;
+    recognizedItems.push(`${tbsp} tbsp Peanut Butter (~${tbsp * 4}g P)`);
+  } else if (lower.includes('almond') || lower.includes('badam') || lower.includes('kaju') || lower.includes('nuts')) {
+    const count = getQty(/(\d+(?:\.\d+)?)\s*(?:almond|badam|nuts|kaju)/, 10);
+    estCals += count * 7;
+    estProtein += count * 0.25;
+    estFat += count * 0.6;
+    estCarbs += count * 0.25;
+    recognizedItems.push(`${count} Nuts (~${(count * 0.25).toFixed(1)}g P)`);
+  }
+
+  // Fallback for unlisted foods
   if (recognizedItems.length === 0) {
     return {
       name: text,
-      calories: 250,
-      protein: 12,
-      carbs: 30,
-      fat: 7,
-      recognizedItems: ['Custom mixed meal estimate (~12g P)']
+      calories: 280,
+      protein: 14,
+      carbs: 34,
+      fat: 9,
+      recognizedItems: ['Balanced Indian Meal Estimate (~14g Protein)']
     };
   }
 
   return {
     name: text,
     calories: Math.round(estCals),
-    protein: Math.round(estProtein),
+    protein: Math.round(estProtein * 10) / 10,
     carbs: Math.round(estCarbs),
     fat: Math.round(estFat),
     recognizedItems
