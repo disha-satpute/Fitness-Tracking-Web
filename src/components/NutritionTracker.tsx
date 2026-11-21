@@ -13,18 +13,52 @@ import {
   Sun,
   Moon,
   Cookie,
-  Plus
+  Plus,
+  Edit2,
+  Check,
+  X
 } from 'lucide-react';
 import { FoodItem } from '../types/fitness';
 import { parseQuickIndianMeal } from '../utils/aiAdvisor';
 import { getFormattedDate, getISODate } from '../utils/dateUtils';
 
 export const NutritionTracker: React.FC = () => {
-  const { calorieProfile, nutritionLogs, addFoodLog, selectedDate, setSelectedDate } = useFitness();
+  const { calorieProfile, nutritionLogs, addFoodLog, updateFoodItem, deleteFoodItem, selectedDate, setSelectedDate } = useFitness();
 
   const [activeTab, setActiveTab] = useState<'daily' | 'ai-scanner'>('daily');
 
-  // Manual food form state
+  // Editing state for an individual food item
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editMealName, setEditMealName] = useState<string>('');
+  const [editFoodName, setEditFoodName] = useState<string>('');
+  const [editCalories, setEditCalories] = useState<string>('');
+  const [editProtein, setEditProtein] = useState<string>('');
+
+  const handleStartEdit = (mealName: string, item: FoodItem) => {
+    setEditingItemId(item.id);
+    setEditMealName(mealName);
+    setEditFoodName(item.name);
+    setEditCalories(item.calories.toString());
+    setEditProtein(item.protein.toString());
+  };
+
+  const handleCancelEdit = () => {
+    setEditingItemId(null);
+  };
+
+  const handleSaveEdit = (mealName: string, itemId: string) => {
+    if (!editFoodName.trim()) return;
+    updateFoodItem(selectedDate, mealName, itemId, {
+      name: editFoodName.trim(),
+      calories: parseFloat(editCalories) || 0,
+      protein: parseFloat(editProtein) || 0
+    });
+    setEditingItemId(null);
+  };
+
+  const handleDeleteItem = (mealName: string, itemId: string) => {
+    deleteFoodItem(selectedDate, mealName, itemId);
+  };
   const [selectedSlot, setSelectedSlot] = useState<'Breakfast' | 'Lunch' | 'Dinner' | 'Snacks'>('Breakfast');
   const [foodName, setFoodName] = useState('');
   const [foodCalories, setFoodCalories] = useState('');
@@ -275,14 +309,86 @@ export const NutritionTracker: React.FC = () => {
                   </div>
 
                   <div className="space-y-1.5">
-                    {meal.items.map((item) => (
-                      <div key={item.id} className="flex items-center justify-between text-xs py-1">
-                        <span className="text-slate-200 font-medium truncate">{item.name}</span>
-                        <span className="font-mono text-slate-400">
-                          {item.calories} kcal • <strong className="text-cyan-400">{item.protein}g P</strong>
-                        </span>
-                      </div>
-                    ))}
+                    {meal.items.map((item) => {
+                      const isEditing = editingItemId === item.id;
+
+                      if (isEditing) {
+                        return (
+                          <div key={item.id} className="p-2.5 rounded-xl bg-slate-950 border border-indigo-500/50 space-y-2">
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                value={editFoodName}
+                                onChange={(e) => setEditFoodName(e.target.value)}
+                                className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white"
+                                placeholder="Food name"
+                                autoFocus
+                              />
+                              <input
+                                type="number"
+                                value={editCalories}
+                                onChange={(e) => setEditCalories(e.target.value)}
+                                className="w-16 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white font-mono"
+                                placeholder="Cals"
+                              />
+                              <input
+                                type="number"
+                                value={editProtein}
+                                onChange={(e) => setEditProtein(e.target.value)}
+                                className="w-16 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white font-mono"
+                                placeholder="Protein"
+                              />
+                            </div>
+                            <div className="flex justify-end gap-1.5">
+                              <button
+                                type="button"
+                                onClick={handleCancelEdit}
+                                className="px-2 py-1 rounded-md bg-slate-800 text-slate-300 text-[10px] hover:bg-slate-700 flex items-center gap-1"
+                              >
+                                <X className="w-3 h-3" /> Cancel
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleSaveEdit(meal.mealName, item.id)}
+                                className="px-2.5 py-1 rounded-md bg-emerald-600 text-white text-[10px] font-bold hover:bg-emerald-500 flex items-center gap-1"
+                              >
+                                <Check className="w-3 h-3" /> Save
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div key={item.id} className="flex items-center justify-between text-xs py-1.5 px-2 rounded-lg hover:bg-slate-950/60 transition group">
+                          <span className="text-slate-200 font-medium truncate">{item.name}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-slate-400">
+                              {item.calories} kcal • <strong className="text-cyan-400">{item.protein}g P</strong>
+                            </span>
+                            {/* Edit & Delete Action Buttons */}
+                            <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition">
+                              <button
+                                type="button"
+                                onClick={() => handleStartEdit(meal.mealName, item)}
+                                title="Edit item"
+                                className="p-1 rounded bg-slate-850 hover:bg-slate-750 text-slate-400 hover:text-white"
+                              >
+                                <Edit2 className="w-3 h-3" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteItem(meal.mealName, item.id)}
+                                title="Delete item"
+                                className="p-1 rounded bg-slate-850 hover:bg-rose-950/80 text-slate-400 hover:text-rose-400"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               ))

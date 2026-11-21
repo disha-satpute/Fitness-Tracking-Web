@@ -10,7 +10,8 @@ import {
   SupplementEntry,
   ProgressPhotoRecord,
   MeasurementRecord,
-  WorkoutSession
+  WorkoutSession,
+  FoodItem
 } from '../types/fitness';
 import {
   INITIAL_USER_PROFILE,
@@ -52,6 +53,8 @@ interface FitnessContextType {
   updateDailySteps: (date: string, steps: number) => void;
   nutritionLogs: DailyNutritionLog[];
   addFoodLog: (date: string, meal: any, item: any) => void;
+  updateFoodItem: (date: string, mealName: string, itemId: string, updatedItem: Partial<FoodItem>) => void;
+  deleteFoodItem: (date: string, mealName: string, itemId: string) => void;
   recoveryLogs: RecoveryLog[];
   addRecoveryLog: (log: Omit<RecoveryLog, 'id'>) => void;
   supplements: SupplementEntry[];
@@ -499,6 +502,40 @@ export const FitnessProvider: React.FC<{ children: React.ReactNode }> = ({ child
     });
   };
 
+  const updateFoodItem = (date: string, mealName: string, itemId: string, updatedItem: Partial<FoodItem>) => {
+    setNutritionLogs((prev) => {
+      const dayIndex = prev.findIndex((d) => d.date === date);
+      if (dayIndex < 0) return prev;
+      const copy = [...prev];
+      const day = { ...copy[dayIndex] };
+      const meal = day.meals.find((m) => m.mealName === mealName);
+      if (meal) {
+        meal.items = meal.items.map((i) => (i.id === itemId ? { ...i, ...updatedItem } : i));
+        copy[dayIndex] = day;
+        apiSync.saveNutritionLog(day);
+      }
+      return copy;
+    });
+  };
+
+  const deleteFoodItem = (date: string, mealName: string, itemId: string) => {
+    setNutritionLogs((prev) => {
+      const dayIndex = prev.findIndex((d) => d.date === date);
+      if (dayIndex < 0) return prev;
+      const copy = [...prev];
+      const day = { ...copy[dayIndex] };
+      const meal = day.meals.find((m) => m.mealName === mealName);
+      if (meal) {
+        meal.items = meal.items.filter((i) => i.id !== itemId);
+        // Clean up empty meal slots if needed
+        day.meals = day.meals.filter((m) => m.items.length > 0);
+        copy[dayIndex] = day;
+        apiSync.saveNutritionLog(day);
+      }
+      return copy;
+    });
+  };
+
   const addRecoveryLog = (log: Omit<RecoveryLog, 'id'>) => {
     const newLog: RecoveryLog = {
       id: `rec-${Date.now()}`,
@@ -553,6 +590,8 @@ export const FitnessProvider: React.FC<{ children: React.ReactNode }> = ({ child
         updateDailySteps,
         nutritionLogs,
         addFoodLog,
+        updateFoodItem,
+        deleteFoodItem,
         recoveryLogs,
         addRecoveryLog,
         supplements,
